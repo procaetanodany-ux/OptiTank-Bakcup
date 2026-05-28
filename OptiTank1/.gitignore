@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.firebase/
+.claude/
+*.local
+*.p8
+deploy_output.txt
+markdown-preview.pdf

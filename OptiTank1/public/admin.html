@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — OptiTank</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:#0f172a;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:24px}
+  .card{background:#1e293b;border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:32px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+  .logo-dot{width:36px;height:36px;background:linear-gradient(135deg,#8b5cf6,#6366f1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .logo-text{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
+  h2{font-size:22px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.3px}
+  p{font-size:13px;color:#64748b;margin-bottom:24px}
+  label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#475569;margin-bottom:6px}
+  input[type=password]{width:100%;padding:13px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-size:15px;outline:none;transition:border .2s}
+  input[type=password]:focus{border-color:rgba(139,92,246,.6)}
+  .err{display:none;color:#f87171;font-size:12px;margin-top:6px}
+  btn{display:block;width:100%;margin-top:20px;padding:14px;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:none;border-radius:13px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.1px;transition:opacity .15s}
+  btn:hover{opacity:.9}
+  .back{display:block;text-align:center;margin-top:16px;font-size:12px;color:#475569;text-decoration:none}
+  .back:hover{color:#94a3b8}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-dot">⚙</div>
+    <span class="logo-text">OptiTank Admin</span>
+  </div>
+  <h2>Connexion</h2>
+  <p>Accès réservé aux administrateurs</p>
+  <label for="pwd">Mot de passe</label>
+  <input type="password" id="pwd" placeholder="••••••••••" autofocus>
+  <div class="err" id="err">Mot de passe incorrect</div>
+  <button onclick="login()" style="display:block;width:100%;margin-top:20px;padding:14px;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:none;border-radius:13px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">
+    Accéder au panneau admin →
+  </button>
+  <a href="/" class="back">← Retour à l'application</a>
+</div>
+<script>
+  document.getElementById('pwd').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  function login() {
+    const v = document.getElementById('pwd').value;
+    if (v === 'Apolite01%') {
+      // Store auth flag + redirect
+      sessionStorage.setItem('_admin_auth', '1');
+      window.location.href = '/?_admin=1';
+    } else {
+      const err = document.getElementById('err');
+      err.style.display = 'block';
+      document.getElementById('pwd').value = '';
+      document.getElementById('pwd').focus();
+      setTimeout(() => err.style.display = 'none', 3000);
+    }
+  }
+</script>
+</body>
+</html>

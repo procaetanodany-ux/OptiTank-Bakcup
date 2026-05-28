@@ -1,0 +1,24 @@
+{
+  "name": "fillz-clone",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "vite": "^5.2.0",
+    "vite-plugin-pwa": "^1.2.0"
+  },
+  "dependencies": {
+    "@dataconnect/generated": "file:src/dataconnect-generated",
+    "@phosphor-icons/web": "^2.1.1",
+    "chart.js": "^4.5.1",
+    "firebase": "^12.11.0",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3"
+  }
+}
