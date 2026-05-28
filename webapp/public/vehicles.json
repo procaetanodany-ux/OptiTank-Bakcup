@@ -1,0 +1,247 @@
+{
+  "ALFA ROMEO": [
+    {"model": "Giulietta", "tank": 60},
+    {"model": "Mito", "tank": 60},
+    {"model": "Giulia", "tank": 58},
+    {"model": "Stelvio", "tank": 58},
+    {"model": "Tonale", "tank": 55}
+  ],
+  "AUDI": [
+    {"model": "A1", "tank": 45},
+    {"model": "A3", "tank": 50},
+    {"model": "A4", "tank": 54},
+    {"model": "A5", "tank": 54},
+    {"model": "A6", "tank": 63},
+    {"model": "A7", "tank": 63},
+    {"model": "A8", "tank": 73},
+    {"model": "Q2", "tank": 40},
+    {"model": "Q3", "tank": 50},
+    {"model": "Q5", "tank": 60},
+    {"model": "Q7", "tank": 70},
+    {"model": "Q8", "tank": 85},
+    {"model": "TT", "tank": 50},
+    {"model": "e-tron", "tank": 0}
+  ],
+  "BMW": [
+    {"model": "Série 1", "tank": 50},
+    {"model": "Série 2", "tank": 50},
+    {"model": "Série 3", "tank": 59},
+    {"model": "Série 4", "tank": 59},
+    {"model": "Série 5", "tank": 68},
+    {"model": "Série 6", "tank": 68},
+    {"model": "Série 7", "tank": 78},
+    {"model": "X1", "tank": 51},
+    {"model": "X2", "tank": 51},
+    {"model": "X3", "tank": 65},
+    {"model": "X4", "tank": 65},
+    {"model": "X5", "tank": 85},
+    {"model": "X6", "tank": 85},
+    {"model": "X7", "tank": 83},
+    {"model": "Z4", "tank": 52},
+    {"model": "i3", "tank": 0},
+    {"model": "i4", "tank": 0},
+    {"model": "iX", "tank": 0}
+  ],
+  "CITROEN": [
+    {"model": "C1", "tank": 35},
+    {"model": "C2", "tank": 35},
+    {"model": "C3", "tank": 45},
+    {"model": "C3 Aircross", "tank": 45},
+    {"model": "C4", "tank": 50},
+    {"model": "C4 Cactus", "tank": 45},
+    {"model": "C4 SpaceTourer", "tank": 53},
+    {"model": "C5 Aircross", "tank": 50},
+    {"model": "C5 X", "tank": 53},
+    {"model": "Berlingo", "tank": 60},
+    {"model": "Spacetourer", "tank": 70},
+    {"model": "Ami", "tank": 0}
+  ],
+  "CUPRA": [
+    {"model": "Formentor", "tank": 50},
+    {"model": "Leon", "tank": 50},
+    {"model": "Ateca", "tank": 55},
+    {"model": "Born", "tank": 0}
+  ],
+  "DACIA": [
+    {"model": "Sandero", "tank": 50},
+    {"model": "Duster", "tank": 50},
+    {"model": "Logan", "tank": 50},
+    {"model": "Jogger", "tank": 50},
+    {"model": "Spring", "tank": 0}
+  ],
+  "FIAT": [
+    {"model": "500", "tank": 35},
+    {"model": "500X", "tank": 48},
+    {"model": "500L", "tank": 48},
+    {"model": "Panda", "tank": 38},
+    {"model": "Tipo", "tank": 50},
+    {"model": "Punto", "tank": 50},
+    {"model": "Ducato", "tank": 69}
+  ],
+  "FORD": [
+    {"model": "Fiesta", "tank": 42},
+    {"model": "Focus", "tank": 52},
+    {"model": "Puma", "tank": 42},
+    {"model": "Kuga", "tank": 54},
+    {"model": "Mustang Mach-E", "tank": 0},
+    {"model": "EcoSport", "tank": 42},
+    {"model": "Mondeo", "tank": 62},
+    {"model": "Ranger", "tank": 80},
+    {"model": "Transit", "tank": 70}
+  ],
+  "HONDA": [
+    {"model": "Jazz", "tank": 40},
+    {"model": "Civic", "tank": 46},
+    {"model": "HR-V", "tank": 40},
+    {"model": "CR-V", "tank": 50},
+    {"model": "e", "tank": 0}
+  ],
+  "HYUNDAI": [
+    {"model": "i10", "tank": 36},
+    {"model": "i20", "tank": 36},
+    {"model": "i30", "tank": 50},
+    {"model": "Kona", "tank": 50},
+    {"model": "Tucson", "tank": 50},
+    {"model": "Santa Fe", "tank": 54},
+    {"model": "Ioniq 5", "tank": 0}
+  ],
+  "KIA": [
+    {"model": "Picanto", "tank": 35},
+    {"model": "Rio", "tank": 35},
+    {"model": "Ceed", "tank": 50},
+    {"model": "Stonic", "tank": 45},
+    {"model": "Sportage", "tank": 54},
+    {"model": "Sorento", "tank": 67},
+    {"model": "EV6", "tank": 0}
+  ],
+  "MAZDA": [
+    {"model": "Mazda2", "tank": 44},
+    {"model": "Mazda3", "tank": 51},
+    {"model": "CX-3", "tank": 44},
+    {"model": "CX-30", "tank": 48},
+    {"model": "CX-5", "tank": 58}
+  ],
+  "MERCEDES-BENZ": [
+    {"model": "Classe A", "tank": 43},
+    {"model": "Classe B", "tank": 43},
+    {"model": "Classe C", "tank": 66},
+    {"model": "Classe E", "tank": 66},
+    {"model": "Classe S", "tank": 78},
+    {"model": "GLA", "tank": 43},
+    {"model": "GLB", "tank": 43},
+    {"model": "GLC", "tank": 66},
+    {"model": "GLE", "tank": 66},
+    {"model": "GLS", "tank": 90},
+    {"model": "EQA", "tank": 0}
+  ],
+  "MINI": [
+    {"model": "Hatch", "tank": 40},
+    {"model": "Clubman", "tank": 48},
+    {"model": "Countryman", "tank": 48},
+    {"model": "Cooper SE", "tank": 0}
+  ],
+  "NISSAN": [
+    {"model": "Micra", "tank": 41},
+    {"model": "Juke", "tank": 46},
+    {"model": "Qashqai", "tank": 46},
+    {"model": "X-Trail", "tank": 55},
+    {"model": "Leaf", "tank": 0}
+  ],
+  "OPEL": [
+    {"model": "Corsa", "tank": 44},
+    {"model": "Astra", "tank": 48},
+    {"model": "Mokka", "tank": 44},
+    {"model": "Crossland", "tank": 44},
+    {"model": "Grandland", "tank": 45},
+    {"model": "Insignia", "tank": 62}
+  ],
+  "PEUGEOT": [
+    {"model": "108", "tank": 35},
+    {"model": "208", "tank": 44},
+    {"model": "2008", "tank": 44},
+    {"model": "308", "tank": 53},
+    {"model": "3008", "tank": 53},
+    {"model": "508", "tank": 62},
+    {"model": "5008", "tank": 53},
+    {"model": "Partner", "tank": 60},
+    {"model": "e-208", "tank": 0}
+  ],
+  "RENAULT": [
+    {"model": "Twingo", "tank": 35},
+    {"model": "Clio", "tank": 42},
+    {"model": "Captur", "tank": 48},
+    {"model": "Megane", "tank": 50},
+    {"model": "Arkana", "tank": 50},
+    {"model": "Kadjar", "tank": 55},
+    {"model": "Austral", "tank": 55},
+    {"model": "Scenic", "tank": 53},
+    {"model": "Espace", "tank": 57},
+    {"model": "Kangoo", "tank": 60},
+    {"model": "Koleos", "tank": 60},
+    {"model": "Trafic", "tank": 80},
+    {"model": "Zoe", "tank": 0}
+  ],
+  "SEAT": [
+    {"model": "Mii", "tank": 35},
+    {"model": "Ibiza", "tank": 40},
+    {"model": "Arona", "tank": 40},
+    {"model": "Leon", "tank": 50},
+    {"model": "Ateca", "tank": 50},
+    {"model": "Tarraco", "tank": 58}
+  ],
+  "SKODA": [
+    {"model": "Citigo", "tank": 35},
+    {"model": "Fabia", "tank": 40},
+    {"model": "Scala", "tank": 40},
+    {"model": "Octavia", "tank": 50},
+    {"model": "Kamiq", "tank": 50},
+    {"model": "Karoq", "tank": 50},
+    {"model": "Kodiaq", "tank": 58},
+    {"model": "Superb", "tank": 50},
+    {"model": "Enyaq", "tank": 0}
+  ],
+  "SUZUKI": [
+    {"model": "Ignis", "tank": 32},
+    {"model": "Swift", "tank": 37},
+    {"model": "Vitara", "tank": 47},
+    {"model": "S-Cross", "tank": 47}
+  ],
+  "TESLA": [
+    {"model": "Model 3", "tank": 0},
+    {"model": "Model Y", "tank": 0},
+    {"model": "Model S", "tank": 0},
+    {"model": "Model X", "tank": 0}
+  ],
+  "TOYOTA": [
+    {"model": "Aygo", "tank": 35},
+    {"model": "Yaris", "tank": 35},
+    {"model": "Yaris Cross", "tank": 36},
+    {"model": "Corolla", "tank": 50},
+    {"model": "C-HR", "tank": 36},
+    {"model": "RAV4", "tank": 55},
+    {"model": "Prius", "tank": 43}
+  ],
+  "VOLKSWAGEN": [
+    {"model": "up!", "tank": 35},
+    {"model": "Polo", "tank": 40},
+    {"model": "Taigo", "tank": 40},
+    {"model": "T-Cross", "tank": 40},
+    {"model": "Golf", "tank": 50},
+    {"model": "T-Roc", "tank": 40},
+    {"model": "Tiguan", "tank": 58},
+    {"model": "Touran", "tank": 58},
+    {"model": "Passat", "tank": 66},
+    {"model": "Arteon", "tank": 66},
+    {"model": "Touareg", "tank": 58},
+    {"model": "Multivan", "tank": 70},
+    {"model": "ID.3", "tank": 0},
+    {"model": "ID.4", "tank": 0}
+  ],
+  "VOLVO": [
+    {"model": "XC40", "tank": 54},
+    {"model": "XC60", "tank": 71},
+    {"model": "XC90", "tank": 71},
+    {"model": "V60", "tank": 71},
+    {"model": "S60", "tank": 71}
+  ]
+}

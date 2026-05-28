@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OptiTank — Onboarding</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{
+  width:100%;height:100%;background:#030307;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;overflow:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 55% 45% at 30% 25%,rgba(108,99,255,.14),transparent 60%),
+    radial-gradient(ellipse 40% 35% at 75% 75%,rgba(0,212,170,.09),transparent 55%);
+}
+::-webkit-scrollbar{display:none}
+
+/* ─── PHONE ─── */
+.phone{
+  width:393px;height:852px;border-radius:54px;
+  background:#07070D;position:relative;overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.12),
+    0 0 0 9px #12121E,
+    0 0 0 10px rgba(255,255,255,.05),
+    0 50px 130px rgba(0,0,0,.85),
+    0 0 80px rgba(108,99,255,.18);
+  transform-origin:center center;
+  flex-shrink:0;
+}
+.di{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  width:126px;height:36px;background:#000;border-radius:20px;z-index:300;
+}
+.status{
+  position:absolute;top:0;left:0;right:0;height:54px;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 28px 8px;z-index:200;pointer-events:none;
+}
+.st-time{font-size:15px;font-weight:600;color:white;font-family:-apple-system,system-ui}
+.st-icons{display:flex;gap:6px;align-items:center;opacity:.9}
+.home-bar{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  width:134px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);z-index:300;
+}
+
+/* ─── APP SHELL ─── */
+#root{
+  position:absolute;inset:0;top:54px;overflow:hidden;
+}
+
+/* ─── RESPONSIVE SCALE ─── */
+@media(max-height:920px){
+  .phone{
+    height:calc(100vh - 40px);
+    width:calc((100vh - 40px) * 393/852);
+    border-radius:calc(54px * (100vh - 40px)/852);
+  }
+}
+@media(max-width:430px){
+  .phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}
+  .di,.home-bar,.status{display:none}
+  #root{top:0}
+}
+
+/* ─── GLOBAL KEYFRAMES ─── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+@keyframes springIn{from{opacity:0;transform:scale(.5) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes fuelDance{0%,100%{transform:rotate(-9deg) translateY(0)}50%{transform:rotate(9deg) translateY(-8px)}}
+@keyframes fuelBounce{0%,100%{transform:translateY(0)}25%{transform:translateY(-14px)}75%{transform:translateY(-6px)}}
+@keyframes fuelVibrate{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(12deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(8deg)}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 16px 4px rgba(108,99,255,.35)}50%{box-shadow:0 0 32px 10px rgba(108,99,255,.6)}}
+@keyframes tealGlow{0%,100%{box-shadow:0 0 14px 4px rgba(0,212,170,.3)}50%{box-shadow:0 0 28px 10px rgba(0,212,170,.55)}}
+@keyframes confetti{
+  0%{transform:translate(0,0) rotate(0deg) scale(1);opacity:1}
+  100%{transform:translate(var(--cx),var(--cy)) rotate(var(--cr)) scale(0);opacity:0}
+}
+@keyframes badgeUnlock{
+  0%{transform:scale(0) rotate(-25deg);opacity:0}
+  60%{transform:scale(1.18) rotate(6deg);opacity:1}
+  80%{transform:scale(.93) rotate(-3deg)}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+@keyframes ringExpand{
+  0%{transform:scale(.8);opacity:.8}
+  100%{transform:scale(2.4);opacity:0}
+}
+@keyframes slideInR{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOutL{from{transform:translateX(0);opacity:1}to{transform:translateX(-60px);opacity:0}}
+@keyframes slideInL{from{transform:translateX(-100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOutR{from{transform:translateX(0);opacity:1}to{transform:translateX(60px);opacity:0}}
+@keyframes shimmer{
+  0%{background-position:-200% 0}
+  100%{background-position:200% 0}
+}
+@keyframes inputFocus{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes checkDraw{from{stroke-dashoffset:30}to{stroke-dashoffset:0}}
+@keyframes mapPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.08);opacity:1}}
+@keyframes dotBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes carSlide{from{transform:translateX(120px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes progressFill{from{width:0}to{width:var(--target)}}
+</style>
+</head>
+<body>
+
+<!-- Phone shell -->
+<div class="phone" id="phone">
+  <div class="di"></div>
+  <div class="status">
+    <span class="st-time" id="stTime">22:16</span>
+    <div class="st-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="white">
+        <rect x="0" y="8" width="3" height="4" rx=".6" opacity=".4"/>
+        <rect x="4.5" y="5" width="3" height="7" rx=".6" opacity=".65"/>
+        <rect x="9" y="2" width="3" height="10" rx=".6"/>
+        <rect x="13.5" y="0" width="3" height="12" rx=".6"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="white">
+        <path d="M8 9.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+        <path d="M3.5 6.5A6.5 6.5 0 0 1 8 4.7a6.5 6.5 0 0 1 4.5 1.8l1.2-1.3A8.3 8.3 0 0 0 8 3a8.3 8.3 0 0 0-5.7 2.2z" opacity=".6"/>
+        <path d="M5.3 8.3A3.8 3.8 0 0 1 8 7.2c1.06 0 2 .4 2.7 1.1l1.2-1.2A5.5 5.5 0 0 0 8 5.5a5.5 5.5 0 0 0-3.9 1.6z" opacity=".8"/>
+      </svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="white">
+        <rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="white" stroke-opacity=".35" fill="none"/>
+        <rect x="2" y="2" width="19" height="9" rx="2"/>
+        <path d="M25 4.5v4c.8-.3 1.5-1.2 1.5-2s-.7-1.7-1.5-2z" opacity=".4"/>
+      </svg>
+    </div>
+  </div>
+  <div id="root"></div>
+  <div class="home-bar"></div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+
+// ─── DESIGN TOKENS ───────────────────────────────────────────────
+const P = '#6C63FF', PL = '#8B84FF', PD = '#4338CA';
+const A = '#00D4AA', AL = '#33DFBE';
+const S = '#22C55E', W = '#F59E0B', D = '#EF4444';
+const BG = '#07070D', SURF = 'rgba(255,255,255,.06)', BORD = 'rgba(108,99,255,.22)';
+
+// ─── FUELO SVG ───────────────────────────────────────────────────
+const Fuelo = ({ size=80, mood='happy', style={} }) => {
+  const mouths = {
+    happy:  'M30 67 Q40 77 50 67',
+    excited:'M28 64 Q40 78 52 64',
+    curious:'M33 70 Q40 73 47 70',
+    cool:   'M30 68 h20',
+    love:   'M28 65 Q40 79 52 65',
+  };
+  const eyeColors = { happy:A, excited:W, curious:PL, cool:A, love:'#EF4444' };
+  const eyeC = eyeColors[mood] || A;
+  const mouth = mouths[mood] || mouths.happy;
+  const antennaColor = mood === 'excited' ? W : mood === 'love' ? '#EF4444' : A;
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', ...style }}>
+      <svg width={size} height={size*1.3} viewBox="0 0 80 104" fill="none">
+        <defs>
+          <linearGradient id={`fg-${mood}`} x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#B0ABFF"/>
+            <stop offset="45%" stopColor="#6C63FF"/>
+            <stop offset="100%" stopColor="#3328B8"/>
+          </linearGradient>
+          <radialGradient id={`ft-${mood}`} cx="38%" cy="34%" r="66%">
+            <stop offset="0%" stopColor="#5FF0D8"/>
+            <stop offset="100%" stopColor="#009E80"/>
+          </radialGradient>
+          <radialGradient id={`fg-glow-${mood}`} cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="rgba(108,99,255,.35)"/>
+            <stop offset="100%" stopColor="rgba(108,99,255,0)"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="40" cy="56" rx="33" ry="42" fill={`url(#fg-glow-${mood})`}/>
+        <path d="M40 7C24 7 8 31 8 53 8 75 22 97 40 97 58 97 72 75 72 53 72 31 56 7 40 7Z"
+          fill={`url(#fg-${mood})`}/>
+        <ellipse cx="28" cy="37" rx="8" ry="13" fill="rgba(255,255,255,.18)" transform="rotate(-20 28 37)"/>
+        <circle cx="29" cy="54" r="7" fill="#0A0A0F"/>
+        <circle cx="51" cy="54" r="7" fill="#0A0A0F"/>
+        <circle cx="31" cy="52" r="3" fill={eyeC}/>
+        <circle cx="53" cy="52" r="3" fill={eyeC}/>
+        <circle cx="32.5" cy="50.5" r="1.3" fill="white" opacity=".9"/>
+        <circle cx="54.5" cy="50.5" r="1.3" fill="white" opacity=".9"/>
+        {mood === 'love' && <>
+          <path d="M27 49 C27 47 29 46 30 47.5 C31 46 33 47 33 49 C33 51 30 54 30 54Z" fill="#EF4444" transform="scale(.8) translate(6,3)"/>
+          <path d="M47 49 C47 47 49 46 50 47.5 C51 46 53 47 53 49 C53 51 50 54 50 54Z" fill="#EF4444" transform="scale(.8) translate(-8,3)"/>
+        </>}
+        <path d={mouth} stroke="#0A0A0F" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+        <line x1="40" y1="7" x2="40" y2="0" stroke="#8B84FF" strokeWidth="3" strokeLinecap="round"/>
+        <circle cx="40" cy="-3" r="6" fill={`url(#ft-${mood})`}/>
+        <circle cx="37.5" cy="-5.5" r="2.2" fill="white" opacity=".5"/>
+      </svg>
+    </div>
+  );
+};
+
+// ─── CAR SILHOUETTES ─────────────────────────────────────────────
+const CarSilhouette = ({ type='berline', color='#6C63FF', width=220 }) => {
+  const paths = {
+    berline: "M30,55 L45,35 Q60,20 85,20 Q130,20 155,20 Q175,20 190,35 L205,55 L215,58 Q218,65 215,70 L205,72 L198,72 Q196,80 186,80 Q176,80 174,72 L80,72 Q78,80 68,80 Q58,80 56,72 L20,72 Q16,65 20,58 Z",
+    suv:     "M25,55 L40,30 Q55,15 80,15 Q140,15 165,15 Q185,15 200,30 L210,55 L218,58 Q220,66 217,72 L205,74 L200,74 Q198,82 188,82 Q178,82 176,74 L78,74 Q76,82 66,82 Q56,82 54,74 L18,74 Q14,66 18,58 Z",
+    break:   "M28,55 L43,38 Q55,22 75,22 Q150,22 175,22 Q195,22 207,36 L213,55 L218,58 Q220,66 216,72 L205,72 L200,72 Q198,80 188,80 Q178,80 176,72 L78,72 Q76,80 66,80 Q56,80 54,72 L18,72 Q15,66 18,58 Z",
+  };
+  return (
+    <svg width={width} height={width*0.45} viewBox="0 0 240 100" fill="none">
+      <defs>
+        <linearGradient id={`car-g-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity=".9"/>
+          <stop offset="100%" stopColor={color} stopOpacity=".5"/>
+        </linearGradient>
+        <filter id="car-shadow">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/>
+          <feColorMatrix in="b" type="matrix" values={`0 0 0 0 ${parseInt(color.slice(1,3),16)/255} 0 0 0 0 ${parseInt(color.slice(3,5),16)/255} 0 0 0 0 ${parseInt(color.slice(5,7),16)/255} 0 0 0 0.4 0`} result="s"/>
+          <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path d={paths[type]} fill={`url(#car-g-${type})`} filter="url(#car-shadow)"/>
+      {/* Windows */}
+      {type === 'berline' && <>
+        <path d="M55,42 Q65,28 88,28 L130,28 L140,42 Z" fill="rgba(255,255,255,.25)"/>
+        <path d="M143,42 L152,28 Q170,28 180,38 L185,42 Z" fill="rgba(255,255,255,.18)"/>
+      </>}
+      {type === 'suv' && <>
+        <path d="M52,40 Q64,22 88,22 L135,22 L148,40 Z" fill="rgba(255,255,255,.25)"/>
+        <path d="M152,40 L162,22 Q180,22 192,35 L198,40 Z" fill="rgba(255,255,255,.18)"/>
+      </>}
+      {type === 'break' && <>
+        <path d="M52,42 Q64,28 80,28 L170,28 L180,42 Z" fill="rgba(255,255,255,.22)"/>
+      </>}
+      {/* Wheels */}
+      <circle cx="66" cy="74" r="14" fill="#0A0A0F" stroke={color} strokeWidth="2.5"/>
+      <circle cx="66" cy="74" r="7" fill={color} opacity=".6"/>
+      <circle cx="186" cy="74" r="14" fill="#0A0A0F" stroke={color} strokeWidth="2.5"/>
+      <circle cx="186" cy="74" r="7" fill={color} opacity=".6"/>
+      {/* Highlights */}
+      <ellipse cx="120" cy="52" rx="50" ry="5" fill="rgba(255,255,255,.06)"/>
+    </svg>
+  );
+};
+
+// ─── ANIMATED INPUT ──────────────────────────────────────────────
+const AnimInput = ({ label, type='text', value, onChange, icon, error, hint, autofocus=false }) => {
+  const [focused, setFocus] = React.useState(false);
+  const [shown, setShown] = React.useState(false);
+  const hasVal = value && value.length > 0;
+  const isFloat = focused || hasVal;
+  return (
+    <div style={{ marginBottom:16, position:'relative' }}>
+      {/* Label float */}
+      <label style={{
+        position:'absolute', left:16, zIndex:2, pointerEvents:'none',
+        top: isFloat ? 8 : 18,
+        fontSize: isFloat ? 10 : 15,
+        fontWeight: isFloat ? 700 : 400,
+        color: isFloat ? (error ? D : focused ? PL : 'rgba(255,255,255,.45)') : 'rgba(255,255,255,.35)',
+        letterSpacing: isFloat ? '.05em' : 0,
+        textTransform: isFloat ? 'uppercase' : 'none',
+        transition: 'all .22s cubic-bezier(0.34,1.2,0.64,1)',
+      }}>{label}</label>
+
+      {/* Input */}
+      <div style={{
+        position:'relative',
+        background: focused ? 'rgba(108,99,255,.1)' : SURF,
+        border: `1.5px solid ${error ? `${D}70` : focused ? PL : BORD}`,
+        borderRadius: 16,
+        overflow: 'hidden',
+        transition: 'all .2s ease',
+        boxShadow: focused ? `0 0 0 3px ${error ? 'rgba(239,68,68,.15)' : 'rgba(108,99,255,.18)'}` : 'none',
+      }}>
+        {/* Focus line */}
+        <div style={{
+          position:'absolute', bottom:0, left:0, height:2,
+          background: `linear-gradient(90deg,${PL},${A})`,
+          width: focused ? '100%' : '0%',
+          transition: 'width .35s cubic-bezier(0.34,1.1,0.64,1)',
+          borderRadius:'0 0 16px 16px',
+        }}/>
+        <input
+          type={type === 'password' ? (shown ? 'text' : 'password') : type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onFocus={() => setFocus(true)}
+          onBlur={() => setFocus(false)}
+          autoFocus={autofocus}
+          style={{
+            width:'100%', paddingTop:24, paddingBottom:10, paddingLeft:16,
+            paddingRight: type==='password' ? 48 : (icon ? 44 : 16),
+            background:'transparent', border:'none', outline:'none',
+            fontSize:16, fontWeight:500, color:'white',
+            fontFamily:'Inter, sans-serif',
+          }}
+        />
+        {/* Password toggle */}
+        {type === 'password' && (
+          <button onClick={() => setShown(v => !v)} style={{
+            position:'absolute', right:12, top:'50%', transform:'translateY(-50%)',
+            background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,.4)',
+            padding:4,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {shown
+                ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+              }
+            </svg>
+          </button>
+        )}
+        {/* Check icon when valid */}
+        {hasVal && !error && type !== 'password' && (
+          <div style={{
+            position:'absolute', right:14, top:'50%', transform:'translateY(-50%)',
+            animation:'scaleIn .2s cubic-bezier(0.34,1.56,0.64,1)',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={A} strokeWidth="2.5" strokeLinecap="round">
+              <path d="M20 6L9 17l-5-5" strokeDasharray="30" strokeDashoffset="0" style={{animation:'checkDraw .3s ease'}}/>
+            </svg>
+          </div>
+        )}
+      </div>
+      {/* Error / hint */}
+      {(error || hint) && (
+        <div style={{
+          fontSize:11, fontWeight:500, marginTop:5, paddingLeft:4,
+          color: error ? D : 'rgba(255,255,255,.35)',
+          animation:'fadeDown .2s ease',
+        }}>{error || hint}</div>
+      )}
+    </div>
+  );
+};
+
+// ─── PASSWORD STRENGTH ───────────────────────────────────────────
+const StrengthBar = ({ password }) => {
+  const checks = [
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ];
+  const score = checks.filter(Boolean).length;
+  const labels = ['', 'Faible', 'Moyen', 'Bon', 'Fort'];
+  const colors = ['', D, W, PL, A];
+  if (!password) return null;
+  return (
+    <div style={{ marginBottom:16, animation:'fadeUp .25s ease' }}>
+      <div style={{ display:'flex', gap:5, marginBottom:5 }}>
+        {[1,2,3,4].map(i => (
+          <div key={i} style={{
+            flex:1, height:3, borderRadius:999,
+            background: i <= score ? colors[score] : 'rgba(255,255,255,.1)',
+            transition:'background .3s ease, transform .2s ease',
+            transform: i <= score ? 'scaleY(1.3)' : 'scaleY(1)',
+          }}/>
+        ))}
+      </div>
+      <div style={{ fontSize:11, color:colors[score], fontWeight:600 }}>{labels[score]}</div>
+    </div>
+  );
+};
+
+// ─── PROGRESS BAR ────────────────────────────────────────────────
+const Progress = ({ step, total }) => {
+  const pct = ((step) / total) * 100;
+  return (
+    <div style={{
+      position:'absolute', top:0, left:0, right:0, height:3, zIndex:100,
+      background:'rgba(255,255,255,.07)',
+    }}>
+      <div style={{
+        height:'100%', borderRadius:999,
+        background:`linear-gradient(90deg,${PL},${A})`,
+        width:`${pct}%`,
+        transition:'width .5s cubic-bezier(0.34,1.1,0.64,1)',
+        boxShadow:`0 0 8px ${PL}`,
+      }}/>
+    </div>
+  );
+};
+
+// ─── STEP WRAPPER ────────────────────────────────────────────────
+const Step = ({ children, entering, direction='forward' }) => {
+  const anim = entering
+    ? (direction === 'forward' ? 'slideInR' : 'slideInL')
+    : 'none';
+  return (
+    <div style={{
+      position:'absolute', inset:0,
+      display:'flex', flexDirection:'column',
+      animation: `${anim} .4s cubic-bezier(0.34,1.1,0.64,1)`,
+      overflow:'hidden',
+    }}>
+      {children}
+    </div>
+  );
+};
+
+// ─── BRAND GRID ──────────────────────────────────────────────────
+const BRANDS = [
+  { id:'vw', name:'Volkswagen', color:'#1E3A8A' },
+  { id:'bmw', name:'BMW', color:'#1E40AF' },
+  { id:'mercedes', name:'Mercedes', color:'#1F2937' },
+  { id:'audi', name:'Audi', color:'#DC2626' },
+  { id:'peugeot', name:'Peugeot', color:'#1E3A5F' },
+  { id:'renault', name:'Renault', color:'#FBBF24' },
+  { id:'toyota', name:'Toyota', color:'#DC2626' },
+  { id:'tesla', name:'Tesla', color:'#EF4444' },
+  { id:'ford', name:'Ford', color:'#1D4ED8' },
+  { id:'hyundai', name:'Hyundai', color:'#1E3A8A' },
+  { id:'skoda', name:'Skoda', color:'#16A34A' },
+  { id:'seat', name:'SEAT', color:'#374151' },
+];
+
+const BrandLogo = ({ brand, selected, onSelect }) => {
+  const [pressed, setPressed] = React.useState(false);
+  return (
+    <div
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => { setPressed(false); onSelect(brand.id); }}
+      onPointerLeave={() => setPressed(false)}
+      style={{
+        background: selected ? `${brand.color}30` : SURF,
+        border: `1.5px solid ${selected ? brand.color : BORD}`,
+        borderRadius: 16,
+        padding: '14px 8px',
+        display:'flex', flexDirection:'column', alignItems:'center', gap:6,
+        cursor:'pointer',
+        transform: pressed ? 'scale(.93)' : selected ? 'scale(1.04)' : 'scale(1)',
+        transition:'all .18s cubic-bezier(0.34,1.56,0.64,1)',
+        boxShadow: selected ? `0 4px 16px ${brand.color}50, 0 0 0 1px ${brand.color}40` : 'none',
+      }}>
+      {/* Brand initial as logo placeholder */}
+      <div style={{
+        width:36, height:36, borderRadius:10,
+        background: selected ? brand.color : `${brand.color}40`,
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontSize:13, fontWeight:900, color:'white',
+        transition:'all .18s ease',
+      }}>
+        {brand.name.slice(0,2).toUpperCase()}
+      </div>
+      <span style={{
+        fontSize:10, fontWeight:600, color: selected ? 'white' : 'rgba(255,255,255,.5)',
+        textAlign:'center', lineHeight:1.2,
+      }}>{brand.name}</span>
+      {selected && (
+        <div style={{
+          position:'absolute', top:6, right:6,
+          width:16, height:16, borderRadius:'50%',
+          background:A, display:'flex', alignItems:'center', justifyContent:'center',
+          animation:'scaleIn .2s cubic-bezier(0.34,1.56,0.64,1)',
+        }}>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── FUEL TYPE CARD ──────────────────────────────────────────────
+const FuelCard = ({ label, sub, color, selected, onSelect, icon }) => {
+  const [p, setP] = React.useState(false);
+  return (
+    <div
+      onPointerDown={() => setP(true)}
+      onPointerUp={() => { setP(false); onSelect(); }}
+      onPointerLeave={() => setP(false)}
+      style={{
+        background: selected ? `${color}18` : SURF,
+        border: `1.5px solid ${selected ? color : BORD}`,
+        borderRadius:20, padding:'16px 14px',
+        display:'flex', alignItems:'center', gap:14,
+        cursor:'pointer',
+        transform: p ? 'scale(.97)' : selected ? 'scale(1.01)' : 'scale(1)',
+        transition:'all .18s cubic-bezier(0.34,1.56,0.64,1)',
+        boxShadow: selected ? `0 4px 20px ${color}40` : 'none',
+        marginBottom:10,
+      }}>
+      <div style={{
+        width:44, height:44, borderRadius:14, flexShrink:0,
+        background: selected ? `${color}25` : 'rgba(255,255,255,.05)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        border:`1px solid ${selected ? `${color}50` : 'rgba(255,255,255,.08)'}`,
+        transition:'all .2s',
+      }}>{icon}</div>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize:16, fontWeight:700, color: selected ? 'white' : 'rgba(255,255,255,.8)', marginBottom:2 }}>{label}</div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,.38)' }}>{sub}</div>
+      </div>
+      <div style={{
+        width:22, height:22, borderRadius:'50%',
+        background: selected ? color : 'rgba(255,255,255,.08)',
+        border:`2px solid ${selected ? color : 'rgba(255,255,255,.15)'}`,
+        display:'flex', alignItems:'center', justifyContent:'center',
+        transition:'all .2s cubic-bezier(0.34,1.56,0.64,1)',
+      }}>
+        {selected && <div style={{ width:8, height:8, borderRadius:'50%', background:'white' }}/>}
+      </div>
+    </div>
+  );
+};
+
+// ─── CONFETTI ───────────────────────────────────────────────────
+const Confetti = () => {
+  const colors = [P, PL, A, AL, S, W, '#F472B6', '#60A5FA', '#34D399'];
+  const pieces = React.useMemo(() =>
+    Array.from({length:60}, (_, i) => ({
+      id:i,
+      color: colors[i % colors.length],
+      cx: `${(Math.random()-0.5)*320}px`,
+      cy: `${-Math.random()*600-100}px`,
+      cr: `${Math.random()*720-360}deg`,
+      left: `${Math.random()*100}%`,
+      top: `${30 + Math.random()*30}%`,
+      size: 6 + Math.random()*8,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle',
+      delay: Math.random()*0.4,
+      dur: 0.9 + Math.random()*0.6,
+    })), []);
+  return (
+    <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:50, overflow:'hidden' }}>
+      {pieces.map(p => (
+        <div key={p.id} style={{
+          position:'absolute',
+          left:p.left, top:p.top,
+          width: p.shape==='circle' ? p.size : p.size*1.4,
+          height: p.shape==='circle' ? p.size : p.size*0.7,
+          borderRadius: p.shape==='circle' ? '50%' : 3,
+          background: p.color,
+          '--cx':p.cx, '--cy':p.cy, '--cr':p.cr,
+          animation:`confetti ${p.dur}s cubic-bezier(.3,0,.7,1) ${p.delay}s forwards`,
+          opacity:0,
+        }}/>
+      ))}
+    </div>
+  );
+};
+
+// ─── BTN PRIMARY ────────────────────────────────────────────────
+const Btn = ({ children, onClick, variant='primary', disabled=false, style={} }) => {
+  const [p, setP] = React.useState(false);
+  const bg = {
+    primary:`linear-gradient(135deg,${PL},${PD})`,
+    accent:`linear-gradient(135deg,${AL},${A})`,
+    ghost:'transparent',
+  }[variant];
+  return (
+    <button
+      onClick={onClick} disabled={disabled}
+      onPointerDown={() => !disabled && setP(true)}
+      onPointerUp={() => setP(false)}
+      onPointerLeave={() => setP(false)}
+      style={{
+        background:bg, color:variant==='ghost'?'rgba(255,255,255,.5)':'white',
+        padding:'16px 28px', borderRadius:999, fontSize:16, fontWeight:800,
+        border: variant==='ghost' ? '1px solid rgba(255,255,255,.12)' : 'none',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? .45 : 1,
+        width:'100%',
+        boxShadow: variant==='primary' ? `0 6px 24px rgba(108,99,255,.45)` :
+                   variant==='accent' ? `0 6px 24px rgba(0,212,170,.4)` : 'none',
+        transform: p ? 'scale(.97)' : 'scale(1)',
+        transition:'transform .1s ease, opacity .2s',
+        fontFamily:'Inter,sans-serif', letterSpacing:'-.2px',
+        ...style,
+      }}>{children}</button>
+  );
+};
+
+// ─── MAIN APP ───────────────────────────────────────────────────
+const TOTAL_STEPS = 6;
+
+function App() {
+  const [step, setStep] = React.useState(0);
+  const [dir, setDir] = React.useState('forward');
+  const [entering, setEntering] = React.useState(true);
+
+  // Form state
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [emailError, setEmailError] = React.useState('');
+  const [brand, setBrand] = React.useState(null);
+  const [carType, setCarType] = React.useState('berline');
+  const [fuelType, setFuelType] = React.useState(null);
+  const [locGranted, setLocGranted] = React.useState(false);
+  const [showConfetti, setShowConfetti] = React.useState(false);
+
+  const goNext = () => {
+    setDir('forward');
+    setEntering(false);
+    setTimeout(() => { setStep(s => s+1); setEntering(true); }, 0);
+  };
+  const goBack = () => {
+    if (step === 0) return;
+    setDir('back');
+    setEntering(false);
+    setTimeout(() => { setStep(s => s-1); setEntering(true); }, 0);
+  };
+
+  const validateEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+  const handleAccountNext = () => {
+    if (!validateEmail(email)) { setEmailError('Adresse email invalide'); return; }
+    if (password.length < 6) { setEmailError(''); return; }
+    setEmailError('');
+    goNext();
+  };
+
+  const handleSuccess = () => {
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 2000);
+  };
+
+  // ── STEP 0 — WELCOME ──────────────────────────────────────────
+  const StepWelcome = () => (
+    <Step entering={entering} direction={dir}>
+      <div style={{
+        flex:1, display:'flex', flexDirection:'column', alignItems:'center',
+        justifyContent:'space-between', padding:'28px 28px 40px',
+        background:`radial-gradient(ellipse 80% 60% at 50% 35%,rgba(108,99,255,.22),transparent 65%), ${BG}`,
+      }}>
+        {/* Top spacer */}
+        <div/>
+        {/* Center content */}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:0 }}>
+          {/* Fuelo mascot dancing */}
+          <div style={{ animation:'fuelDance 2s ease-in-out infinite', marginBottom:8, animation:'fuelDance 2s ease-in-out infinite' }}>
+            <Fuelo size={110} mood="excited"/>
+          </div>
+
+          <div style={{
+            fontSize:32, fontWeight:900, color:'white', letterSpacing:'-1px',
+            textAlign:'center', lineHeight:1.05, marginBottom:12,
+            animation:'fadeUp .5s ease .3s both',
+          }}>
+            Bonjour, je<br/>m'appelle <span style={{
+              background:`linear-gradient(135deg,${PL},${A})`,
+              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
+            }}>Fuelo</span> 👋
+          </div>
+          <div style={{
+            fontSize:16, color:'rgba(255,255,255,.5)', textAlign:'center',
+            lineHeight:1.6, maxWidth:280,
+            animation:'fadeUp .5s ease .45s both',
+          }}>
+            Ton compagnon de route qui te fait économiser sur chaque plein en Suisse.
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div style={{ width:'100%', animation:'fadeUp .5s ease .6s both' }}>
+          <Btn onClick={goNext}>Commencer l'aventure →</Btn>
+          <div style={{ textAlign:'center', marginTop:14, fontSize:13, color:'rgba(255,255,255,.3)' }}>
+            Déjà un compte ?{' '}
+            <span style={{ color:PL, fontWeight:600, cursor:'pointer' }} onClick={goNext}>Se connecter</span>
+          </div>
+        </div>
+      </div>
+    </Step>
+  );
+
+  // ── STEP 1 — COMPTE ───────────────────────────────────────────
+  const StepCompte = () => {
+    const strength = [password.length >= 8, /[A-Z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password)].filter(Boolean).length;
+    return (
+      <Step entering={entering} direction={dir}>
+        <div style={{
+          flex:1, display:'flex', flexDirection:'column',
+          padding:'20px 24px 32px', background:BG, overflow:'auto',
+        }}>
+          {/* Back */}
+          <button onClick={goBack} style={{
+            background:'none', border:'none', cursor:'pointer',
+            display:'flex', alignItems:'center', gap:6,
+            color:'rgba(255,255,255,.45)', fontSize:13, fontWeight:600, marginBottom:24, width:'fit-content',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            Retour
+          </button>
+
+          {/* Header */}
+          <div style={{ marginBottom:28 }}>
+            <div style={{
+              width:48, height:48, borderRadius:14,
+              background:`linear-gradient(135deg,${PL},${PD})`,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              marginBottom:16, boxShadow:`0 4px 16px rgba(108,99,255,.45)`,
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div style={{ fontSize:26, fontWeight:900, color:'white', letterSpacing:'-.5px', marginBottom:6 }}>
+              Créer ton compte
+            </div>
+            <div style={{ fontSize:14, color:'rgba(255,255,255,.45)', lineHeight:1.5 }}>
+              C'est gratuit et prend 30 secondes.
+            </div>
+          </div>
+
+          {/* Form */}
+          <div style={{ flex:1 }}>
+            <AnimInput
+              label="Adresse email"
+              type="email"
+              value={email}
+              onChange={v => { setEmail(v); if(emailError) setEmailError(''); }}
+              error={emailError}
+              autofocus
+            />
+            <AnimInput
+              label="Mot de passe"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              hint="6 caractères minimum"
+            />
+            <StrengthBar password={password}/>
+
+            {/* Social divider */}
+            <div style={{ display:'flex', alignItems:'center', gap:12, margin:'16px 0' }}>
+              <div style={{ flex:1, height:1, background:'rgba(255,255,255,.08)' }}/>
+              <span style={{ fontSize:12, color:'rgba(255,255,255,.3)', fontWeight:500 }}>ou continuer avec</span>
+              <div style={{ flex:1, height:1, background:'rgba(255,255,255,.08)' }}/>
+            </div>
+
+            {/* Social buttons */}
+            <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+              {[
+                { name:'Apple', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg> },
+                { name:'Google', icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> },
+              ].map(s => (
+                <button key={s.name} onClick={goNext} style={{
+                  flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                  background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.1)',
+                  borderRadius:14, padding:'11px', cursor:'pointer',
+                  color:'rgba(255,255,255,.75)', fontSize:13, fontWeight:600, fontFamily:'Inter,sans-serif',
+                  transition:'all .15s',
+                }}>
+                  {s.icon}{s.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Btn
+            onClick={handleAccountNext}
+            disabled={!validateEmail(email) || password.length < 6}
+          >
+            Continuer →
+          </Btn>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,.25)', textAlign:'center', marginTop:12, lineHeight:1.6 }}>
+            En continuant, tu acceptes nos Conditions d'utilisation<br/>et notre Politique de confidentialité.
+          </div>
+        </div>
+      </Step>
+    );
+  };
+
+  // ── STEP 2 — MARQUE ───────────────────────────────────────────
+  const StepBrand = () => (
+    <Step entering={entering} direction={dir}>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', background:BG, overflow:'hidden' }}>
+        <div style={{ padding:'20px 24px 12px', flexShrink:0 }}>
+          <button onClick={goBack} style={{
+            background:'none', border:'none', cursor:'pointer',
+            display:'flex', alignItems:'center', gap:6,
+            color:'rgba(255,255,255,.45)', fontSize:13, fontWeight:600, marginBottom:20, width:'fit-content',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            Retour
+          </button>
+          <div style={{ fontSize:24, fontWeight:900, color:'white', letterSpacing:'-.5px', marginBottom:6 }}>
+            Ta voiture 🚗
+          </div>
+          <div style={{ fontSize:14, color:'rgba(255,255,255,.4)' }}>
+            Pour calculer tes économies exactes.
+          </div>
+        </div>
+
+        <div style={{ flex:1, overflow:'auto', padding:'0 24px 20px' }}>
+          <div style={{
+            display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10,
+            position:'relative',
+          }}>
+            {BRANDS.map((b, i) => (
+              <div key={b.id} style={{ animation:`springIn .35s cubic-bezier(0.34,1.56,0.64,1) ${i*0.04}s both`, position:'relative' }}>
+                <BrandCard brand={b} selected={brand===b.id} onSelect={setBrand}/>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ padding:'0 24px 32px', flexShrink:0 }}>
+          <Btn onClick={goNext} disabled={!brand}>
+            {brand ? `Continuer avec ${BRANDS.find(b=>b.id===brand)?.name} →` : 'Choisir une marque'}
+          </Btn>
+          <button onClick={goNext} style={{
+            width:'100%', background:'none', border:'none', cursor:'pointer',
+            color:'rgba(255,255,255,.3)', fontSize:13, fontWeight:500, marginTop:10,
+            fontFamily:'Inter,sans-serif', padding:8,
+          }}>Passer cette étape</button>
+        </div>
+      </div>
+    </Step>
+  );
+
+  // Brand card sub-component
+  const BrandCard = ({ brand, selected, onSelect }) => {
+    const [p, setP] = React.useState(false);
+    return (
+      <div
+        onPointerDown={() => setP(true)}
+        onPointerUp={() => { setP(false); onSelect(brand.id); }}
+        onPointerLeave={() => setP(false)}
+        style={{
+          background: selected ? `${brand.color}28` : SURF,
+          border:`1.5px solid ${selected ? brand.color : BORD}`,
+          borderRadius:16, padding:'14px 8px',
+          display:'flex', flexDirection:'column', alignItems:'center', gap:7,
+          cursor:'pointer', position:'relative',
+          transform: p ? 'scale(.92)' : selected ? 'scale(1.04)' : 'scale(1)',
+          transition:'all .18s cubic-bezier(0.34,1.56,0.64,1)',
+          boxShadow: selected ? `0 4px 18px ${brand.color}45` : 'none',
+        }}>
+        <div style={{
+          width:38, height:38, borderRadius:10,
+          background: selected ? brand.color : `${brand.color}35`,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:14, fontWeight:900, color:'white',
+          boxShadow: selected ? `0 2px 10px ${brand.color}50` : 'none',
+          transition:'all .18s',
+        }}>{brand.name.slice(0,2).toUpperCase()}</div>
+        <span style={{ fontSize:10, fontWeight:600, color:selected?'white':'rgba(255,255,255,.45)', textAlign:'center', lineHeight:1.2 }}>
+          {brand.name}
+        </span>
+        {selected && (
+          <div style={{
+            position:'absolute', top:5, right:5, width:16, height:16,
+            borderRadius:'50%', background:A,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            animation:'scaleIn .2s cubic-bezier(0.34,1.56,0.64,1)',
+          }}>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── STEP 3 — CARBURANT ────────────────────────────────────────
+  const StepFuel = () => (
+    <Step entering={entering} direction={dir}>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', background:BG }}>
+        <div style={{ padding:'20px 24px 16px' }}>
+          <button onClick={goBack} style={{
+            background:'none', border:'none', cursor:'pointer',
+            display:'flex', alignItems:'center', gap:6,
+            color:'rgba(255,255,255,.45)', fontSize:13, fontWeight:600, marginBottom:20, width:'fit-content',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            Retour
+          </button>
+
+          {/* Car type selector */}
+          <div style={{ marginBottom:20 }}>
+            <div style={{ fontSize:14, fontWeight:600, color:'rgba(255,255,255,.45)', marginBottom:12, letterSpacing:'.04em', textTransform:'uppercase', fontSize:11 }}>
+              Type de carrosserie
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              {['berline','suv','break'].map(t => (
+                <button key={t} onClick={() => setCarType(t)} style={{
+                  flex:1, background: carType===t ? `${P}20` : SURF,
+                  border:`1.5px solid ${carType===t ? P : BORD}`,
+                  borderRadius:12, padding:'9px 6px', cursor:'pointer',
+                  color: carType===t ? PL : 'rgba(255,255,255,.5)',
+                  fontSize:12, fontWeight:700, textTransform:'capitalize',
+                  fontFamily:'Inter,sans-serif',
+                  transition:'all .18s cubic-bezier(0.34,1.56,0.64,1)',
+                  transform: carType===t ? 'scale(1.03)' : 'scale(1)',
+                }}>{t}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Car silhouette */}
+          <div style={{
+            display:'flex', justifyContent:'center', alignItems:'center',
+            padding:'12px 0 8px',
+            animation:'carSlide .4s cubic-bezier(0.34,1.2,0.64,1)',
+          }}>
+            <CarSilhouette type={carType} color={brand ? BRANDS.find(b=>b.id===brand)?.color||P : P} width={280}/>
+          </div>
+
+          <div style={{ fontSize:22, fontWeight:900, color:'white', letterSpacing:'-.4px', marginBottom:6, marginTop:8 }}>
+            Ton carburant ⛽
+          </div>
+          <div style={{ fontSize:14, color:'rgba(255,255,255,.4)', marginBottom:16 }}>
+            Pour des prix toujours pertinents.
+          </div>
+        </div>
+
+        <div style={{ flex:1, overflow:'auto', padding:'0 24px' }}>
+          {[
+            { id:'sp95', label:'SP 95', sub:'Essence sans plomb 95', color:S, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={S} strokeWidth="2"><path d="M3 22V8l5-5h8l5 5v14H3z"/><path d="M10 22V16h4v6"/></svg> },
+            { id:'sp98', label:'SP 98', sub:'Essence sans plomb 98', color:PL, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={PL} strokeWidth="2"><path d="M3 22V8l5-5h8l5 5v14H3z"/><path d="M10 22V16h4v6"/></svg> },
+            { id:'diesel', label:'Diesel', sub:'Gazole — moteur diesel', color:W, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={W} strokeWidth="2"><path d="M3 22V8l5-5h8l5 5v14H3z"/><path d="M10 22V16h4v6"/></svg> },
+            { id:'electrique', label:'Électrique', sub:'Bornes de recharge', color:A, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={A} strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+          ].map((f,i) => (
+            <div key={f.id} style={{ animation:`fadeUp .3s ease ${i*0.07}s both` }}>
+              <FuelCard
+                label={f.label} sub={f.sub} color={f.color} icon={f.icon}
+                selected={fuelType===f.id}
+                onSelect={() => setFuelType(f.id)}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div style={{ padding:'12px 24px 32px', flexShrink:0 }}>
+          <Btn onClick={goNext} disabled={!fuelType}>
+            {fuelType ? 'Continuer →' : 'Choisir un carburant'}
+          </Btn>
+        </div>
+      </div>
+    </Step>
+  );
+
+  // ── STEP 4 — LOCALISATION ────────────────────────────────────
+  const StepLocation = () => {
+    const [requesting, setRequesting] = React.useState(false);
+    const handleAllow = () => {
+      setRequesting(true);
+      setTimeout(() => { setLocGranted(true); setTimeout(goNext, 700); }, 1200);
+    };
+    return (
+      <Step entering={entering} direction={dir}>
+        <div style={{
+          flex:1, display:'flex', flexDirection:'column', alignItems:'center',
+          justifyContent:'space-between', padding:'28px 28px 40px',
+          background:`radial-gradient(ellipse 70% 50% at 50% 40%,rgba(0,212,170,.12),transparent 65%), ${BG}`,
+        }}>
+          <div/>
+
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:24, textAlign:'center' }}>
+            {/* Animated map radar */}
+            <div style={{ position:'relative', width:160, height:160, marginBottom:8 }}>
+              {/* Rings */}
+              {[1,2,3].map(i => (
+                <div key={i} style={{
+                  position:'absolute', inset:0,
+                  borderRadius:'50%',
+                  border:`1.5px solid rgba(0,212,170,${0.15+i*0.08})`,
+                  transform:`scale(${0.4+i*0.2})`,
+                  transformOrigin:'center',
+                  animation:`mapPulse ${1.5+i*0.4}s ease-in-out ${i*0.3}s infinite`,
+                }}/>
+              ))}
+              {/* Center pin */}
+              <div style={{
+                position:'absolute', top:'50%', left:'50%',
+                transform:'translate(-50%,-50%)',
+                width:48, height:48, borderRadius:'50%',
+                background:`radial-gradient(circle,${AL},${A})`,
+                boxShadow:`0 0 24px ${A}70`,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                animation:'tealGlow 2s ease-in-out infinite',
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                  <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              {/* Dots representing stations */}
+              {[{x:'20%',y:'30%',c:S},{x:'75%',y:'25%',c:W},{x:'65%',y:'70%',c:S},{x:'18%',y:'68%',c:D},{x:'82%',y:'55%',c:S}].map((d,i) => (
+                <div key={i} style={{
+                  position:'absolute', left:d.x, top:d.y,
+                  width:8, height:8, borderRadius:'50%', background:d.c,
+                  boxShadow:`0 0 6px ${d.c}`,
+                  animation:`dotBounce 2s ease-in-out ${i*0.3}s infinite`,
+                }}/>
+              ))}
+            </div>
+
+            <div>
+              <div style={{ fontSize:28, fontWeight:900, color:'white', letterSpacing:'-.5px', marginBottom:10 }}>
+                Stations près de toi 📍
+              </div>
+              <div style={{ fontSize:15, color:'rgba(255,255,255,.45)', lineHeight:1.6, maxWidth:280 }}>
+                OptiTank a besoin de ta position pour trouver les meilleures stations autour de toi en temps réel.
+              </div>
+            </div>
+
+            <div style={{
+              background:'rgba(0,212,170,.08)', border:`1px solid rgba(0,212,170,.25)`,
+              borderRadius:16, padding:'12px 16px', width:'100%',
+              display:'flex', alignItems:'center', gap:12,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={A} strokeWidth="2">
+                <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+              </svg>
+              <div style={{ fontSize:13, color:'rgba(255,255,255,.7)', lineHeight:1.5 }}>
+                <strong style={{ color:'white' }}>3 000+ stations</strong> en Suisse analysées en direct via l'API TCS.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:10 }}>
+            <Btn variant="accent" onClick={handleAllow}>
+              {requesting ? (
+                <span style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ width:16, height:16, borderRadius:'50%', border:'2px solid rgba(255,255,255,.4)', borderTop:'2px solid white', display:'inline-block', animation:'spin .7s linear infinite' }}/>
+                  {locGranted ? '✓ Localisation activée !' : 'Activation…'}
+                </span>
+              ) : '📍 Autoriser la localisation'}
+            </Btn>
+            <Btn variant="ghost" onClick={goNext}>Plus tard</Btn>
+          </div>
+        </div>
+      </Step>
+    );
+  };
+
+  // ── STEP 5 — SUCCESS ──────────────────────────────────────────
+  const StepSuccess = () => {
+    const [badgeVisible, setBadgeVisible] = React.useState(false);
+    const [counter, setCounter] = React.useState(0);
+    React.useEffect(() => {
+      setShowConfetti(true);
+      setTimeout(() => setBadgeVisible(true), 400);
+      const target = 47.30;
+      const start = Date.now();
+      const dur = 1600;
+      const tick = () => {
+        const t = Math.min((Date.now()-start)/dur, 1);
+        const ease = 1 - Math.pow(1-t, 3);
+        setCounter(ease*target);
+        if(t < 1) requestAnimationFrame(tick);
+      };
+      setTimeout(() => requestAnimationFrame(tick), 600);
+      return () => setShowConfetti(false);
+    }, []);
+
+    return (
+      <Step entering={entering} direction={dir}>
+        {showConfetti && <Confetti/>}
+        <div style={{
+          flex:1, display:'flex', flexDirection:'column', alignItems:'center',
+          justifyContent:'space-between', padding:'28px 28px 48px',
+          background:`radial-gradient(ellipse 80% 55% at 50% 30%,rgba(108,99,255,.22),transparent 65%), ${BG}`,
+          overflow:'hidden',
+        }}>
+          <div/>
+
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, width:'100%' }}>
+            {/* Fuelo celebrating */}
+            <div style={{ position:'relative' }}>
+              <div style={{ animation:'fuelBounce 1s ease-in-out .2s infinite' }}>
+                <Fuelo size={100} mood="excited"/>
+              </div>
+              {/* Sparkles */}
+              {['⭐','✨','💫','🎉','⭐'].map((e,i) => (
+                <div key={i} style={{
+                  position:'absolute',
+                  top:`${-10+i*15}%`, left:`${-30+i*18}%`,
+                  fontSize:16,
+                  animation:`sparkle ${1+i*0.2}s ease-in-out ${i*0.15}s infinite`,
+                }}>
+                  {e}
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <div style={{ fontSize:32, fontWeight:900, color:'white', textAlign:'center', letterSpacing:'-.8px', lineHeight:1.05, marginBottom:8 }}>
+                C'est parti ! 🎊
+              </div>
+              <div style={{ fontSize:16, color:'rgba(255,255,255,.5)', textAlign:'center', lineHeight:1.5 }}>
+                Bienvenue dans la famille OptiTank 🇨🇭
+              </div>
+            </div>
+
+            {/* Savings preview */}
+            <div style={{
+              background:'linear-gradient(135deg,rgba(0,212,170,.2),rgba(34,197,94,.08))',
+              border:`1px solid rgba(0,212,170,.35)`, borderRadius:24,
+              padding:'20px', width:'100%', textAlign:'center',
+            }}>
+              <div style={{ fontSize:12, fontWeight:700, color:A, letterSpacing:'.06em', textTransform:'uppercase', marginBottom:6 }}>
+                Potentiel d'économies / mois
+              </div>
+              <div style={{ fontSize:52, fontWeight:900, color:A, letterSpacing:'-2px', lineHeight:1 }}>
+                CHF {counter.toFixed(2)}
+              </div>
+              <div style={{ fontSize:13, color:'rgba(255,255,255,.4)', marginTop:6 }}>basé sur 14 pleins · SP95 · Vaud</div>
+            </div>
+
+            {/* First badge unlock */}
+            {badgeVisible && (
+              <div style={{
+                display:'flex', alignItems:'center', gap:14,
+                background:'rgba(255,215,0,.08)', border:'1px solid rgba(255,215,0,.25)',
+                borderRadius:18, padding:'14px 18px', width:'100%',
+                animation:'badgeUnlock .6s cubic-bezier(0.34,1.56,0.64,1)',
+              }}>
+                <div style={{
+                  width:52, height:52, borderRadius:'50%', flexShrink:0,
+                  background:'linear-gradient(135deg,#FFD700,#FF8C00)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  boxShadow:'0 4px 16px rgba(255,215,0,.4)',
+                  position:'relative',
+                }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8">
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/>
+                  </svg>
+                  {/* Pulse ring */}
+                  <div style={{
+                    position:'absolute', inset:-4, borderRadius:'50%',
+                    border:'2px solid rgba(255,215,0,.5)',
+                    animation:'ringExpand 1.2s ease-out .3s infinite',
+                  }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, fontWeight:700, color:'#FFD700', letterSpacing:'.05em', textTransform:'uppercase', marginBottom:3 }}>
+                    🏆 Badge débloqué !
+                  </div>
+                  <div style={{ fontSize:15, fontWeight:800, color:'white' }}>Premier Plein</div>
+                  <div style={{ fontSize:12, color:'rgba(255,255,255,.45)', marginTop:1 }}>Ton premier enregistrement</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ width:'100%' }}>
+            <Btn onClick={() => {
+              setStep(0);
+              setEmail(''); setPassword(''); setBrand(null);
+              setFuelType(null); setLocGranted(false); setShowConfetti(false);
+            }}>
+              Explorer OptiTank →
+            </Btn>
+          </div>
+        </div>
+      </Step>
+    );
+  };
+
+  const steps = [StepWelcome, StepCompte, StepBrand, StepFuel, StepLocation, StepSuccess];
+  const CurrentStep = steps[step];
+
+  return (
+    <div style={{
+      position:'absolute', inset:0, background:BG, overflow:'hidden',
+    }}>
+      <Progress step={step} total={TOTAL_STEPS}/>
+      <CurrentStep/>
+    </div>
+  );
+}
+
+// ─── Global styles ───────────────────────────────────────────────
+const gs = document.createElement('style');
+gs.textContent = `
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sparkle{0%,100%{opacity:0;transform:scale(0) rotate(0)}50%{opacity:1;transform:scale(1) rotate(180deg)}}
+`;
+document.head.appendChild(gs);
+
+// ─── Clock ───────────────────────────────────────────────────────
+(function tick(){
+  const el = document.getElementById('stTime');
+  if(el){const n=new Date();el.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')}
+  setTimeout(tick,30000);
+})();
+
+// ─── Scale ───────────────────────────────────────────────────────
+(function scale(){
+  const p = document.getElementById('phone');
+  if(!p) return;
+  const s = Math.min(1, (window.innerHeight-40)/852, (window.innerWidth-40)/393);
+  p.style.transform = `scale(${s})`;
+  p.style.marginBottom = `${-(852*(1-s))}px`;
+  p.style.marginRight = `${-(393*(1-s))}px`;
+})();
+window.addEventListener('resize', () => {
+  const p = document.getElementById('phone');
+  if(!p) return;
+  const s = Math.min(1,(window.innerHeight-40)/852,(window.innerWidth-40)/393);
+  p.style.transform=`scale(${s})`;
+  p.style.marginBottom=`${-(852*(1-s))}px`;
+  p.style.marginRight=`${-(393*(1-s))}px`;
+});
+
+// ─── Mount ───────────────────────────────────────────────────────
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>

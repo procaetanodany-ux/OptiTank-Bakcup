@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="OptiTank" />
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/logo.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#6C63FF" />
+  <title>OptiTank Web App</title>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+
+<body>
+  <!-- Landing Showcase PWA Gateway -->
+  <!-- Landing Showcase PWA Gateway -->
+  <div id="landing-showcase" style="display: none;">
+
+    <!-- HEADER -->
+    <header>
+      <div class="logo">
+        <img src="/logo-nobg.svg" alt="OptiTank" class="logo-mark" />
+        <span class="logo-text">OptiTank<span>.</span></span>
+      </div>
+      <nav>
+        <a href="#features">Fonctionnalités</a>
+        <a href="#comment">Comment ça marche</a>
+        <a href="#badges">Économies</a>
+        <a href="#cta" class="nav-cta">Installer l'app →</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-content">
+        <div class="hero-text">
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Disponible en Suisse · 3 000+ stations
+          </div>
+          <h1 class="hero-title">
+            Roulez plus loin,<br/>
+            payez <em>moins cher</em>
+          </h1>
+          <p class="hero-sub">
+            OptiTank compare les prix carburant en temps réel sur 3 000+ stations suisses, optimise vos trajets et suit vos économies — le tout dans une app mobile premium.
+          </p>
+          <div class="hero-actions">
+            <a href="#cta" class="btn-hero">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3" fill="none"/></svg>
+              Installer l'app
+            </a>
+            <a href="#features" class="btn-hero-ghost">Voir les fonctionnalités →</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-num">3 000<span>+</span></div>
+              <div class="hero-stat-label">Stations en Suisse</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-num">CHF <span>47</span></div>
+              <div class="hero-stat-label">Économisés / mois</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-num"><span>60</span> fps</div>
+              <div class="hero-stat-label">Radar IA fluide</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone mockup -->
+        <div class="phone-wrap">
+          <div class="phone-glow-1"></div>
+          <div class="phone-glow-2"></div>
+          <div class="phone-outer">
+            <div class="phone-shell">
+              <div class="phone-di"></div>
+              <div class="phone-screen">
+                <div class="ps-header">
+                  <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#6C63FF"/><circle cx="16" cy="14.5" r="4" fill="white" opacity=".9"/><circle cx="16" cy="14.5" r="2" fill="#6C63FF"/></svg>
+                  <span class="ps-logo">OptiTank<span>.</span></span>
+                  <div style="margin-left:auto;animation:fueloDance 2s ease-in-out infinite">
+                    <svg width="24" height="31" viewBox="0 0 80 104" fill="none">
+                      <defs><linearGradient id="ph1" x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8B84FF"/><stop offset="100%" stop-color="#4338CA"/></linearGradient></defs>
+                      <path d="M40 6 C24 6, 8 30, 8 52 C8 74, 22 96, 40 96 C58 96, 72 74, 72 52 C72 30, 56 6, 40 6Z" fill="url(#ph1)"/>
+                      <circle cx="29" cy="54" r="6" fill="#0A0A0F"/><circle cx="51" cy="54" r="6" fill="#0A0A0F"/>
+                      <circle cx="31" cy="52" r="2.5" fill="#00D4AA"/><circle cx="53" cy="52" r="2.5" fill="#00D4AA"/>
+                      <path d="M31 67 Q40 74 49 67" stroke="#0A0A0F" stroke-width="3" stroke-linecap="round" fill="none"/>
+                      <line x1="40" y1="6" x2="40" y2="0" stroke="#8B84FF" stroke-width="2.5" stroke-linecap="round"/>
+                      <circle cx="40" cy="-1" r="4" fill="#00D4AA"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="ps-screen-radar">
+                  <div class="ps-section-title">Radar IA</div>
+                  <div class="ps-section-sub">Prix pompe + coût du trajet</div>
+                  <div class="ps-savings-banner">
+                    <div style="font-size:9px;font-weight:700;color:#00D4AA;letter-spacing:.06em;text-transform:uppercase">Vous économisez</div>
+                    <div style="font-size:28px;font-weight:900;color:#00D4AA;line-height:1.1;letter-spacing:-1px">CHF 4.20</div>
+                    <div style="font-size:9px;color:rgba(255,255,255,.4)">vs. prix moyen autour de vous</div>
+                  </div>
+                  <div class="ps-result-1">
+                    <div class="ps-result-row">
+                      <div class="ps-rank">1</div>
+                      <div style="flex:1">
+                        <div class="ps-station-name">Avia Cheseaux</div>
+                        <div style="font-size:9px;color:rgba(255,255,255,.4)">2.3 km · Sur votre trajet</div>
+                      </div>
+                      <div style="text-align:right">
+                        <div class="ps-price">1.720</div>
+                        <div class="ps-saving">−CHF 4.20</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:6px">
+                      <div style="flex:1;background:linear-gradient(135deg,#33DFBE,#00D4AA);border-radius:999px;padding:7px;text-align:center;font-size:11px;font-weight:800;color:#fff">Aller →</div>
+                      <div style="width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ps-small-result">
+                    <div style="width:26px;height:26px;border-radius:8px;background:rgba(34,197,94,.4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0">2</div>
+                    <div style="flex:1"><div style="font-size:12px;font-weight:600;color:#fff">Migrol Cossonay</div><div style="font-size:9px;color:rgba(255,255,255,.4)">4.8 km</div></div>
+                    <div style="font-size:16px;font-weight:800;color:#22C55E">1.790</div>
+                  </div>
+                  <div class="ps-small-result">
+                    <div style="width:26px;height:26px;border-radius:8px;background:rgba(245,158,11,.4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0">3</div>
+                    <div style="flex:1"><div style="font-size:12px;font-weight:600;color:#fff">BP Echallens</div><div style="font-size:9px;color:rgba(255,255,255,.4)">7.1 km</div></div>
+                    <div style="font-size:16px;font-weight:800;color:#F59E0B">1.880</div>
+                  </div>
+                </div>
+                <div class="ps-nav">
+                  <div class="ps-nav-inner">
+                    <div class="ps-nav-tab active">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 7 16.9"/><path d="M12 6a6 6 0 0 1 4.5 10.1"/></svg>
+                      <span style="font-size:8px;color:white;font-weight:700">Radar IA</span>
+                    </div>
+                    <div class="ps-nav-tab"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg></div>
+                    <div class="ps-nav-tab"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/></svg></div>
+                    <div class="ps-nav-tab"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+                    <div class="ps-nav-tab"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="container">
+        <div class="reveal">
+          <div class="section-label">Fonctionnalités</div>
+          <h2 class="section-title">Tout ce dont vous avez besoin<br/>pour payer moins</h2>
+          <p class="section-sub">Du scan radar IA à la gamification, chaque fonctionnalité est conçue pour maximiser vos économies.</p>
+        </div>
+        <div class="features-grid">
+          <div class="feat-card reveal" style="--grad-color:rgba(108,99,255,.2)">
+            <div class="feat-icon" style="background:rgba(108,99,255,.2)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B84FF" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 7.38 16.87M4.62 18.87A10 10 0 0 1 12 2"/><path d="M12 6a6 6 0 0 1 4.47 10.12M7.53 16.12A6 6 0 0 1 12 6"/></svg>
+            </div>
+            <div class="feat-title">Radar IA</div>
+            <div class="feat-desc">Animation sonar en temps réel. Classe les stations par coût total : prix pompe + détour aller-retour. Podium visuel avec les 3 meilleures options.</div>
+            <span class="feat-tag">Écran signature</span>
+          </div>
+          <div class="feat-card reveal" style="--grad-color:rgba(0,212,170,.15)">
+            <div class="feat-icon" style="background:rgba(0,212,170,.2)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00D4AA" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div class="feat-title">Carte interactive</div>
+            <div class="feat-desc">3 000+ stations Suisse via API TCS. Marqueurs prix colorés selon l'écart à la moyenne. Bottom sheet avec détails complets.</div>
+            <span class="feat-tag" style="background:rgba(0,212,170,.15);color:var(--a);border-color:rgba(0,212,170,.25)">Temps réel</span>
+          </div>
+          <div class="feat-card reveal" style="--grad-color:rgba(59,130,246,.15)">
+            <div class="feat-icon" style="background:rgba(59,130,246,.2)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+            </div>
+            <div class="feat-title">Trajets intelligents</div>
+            <div class="feat-desc">Entrez votre itinéraire — l'IA trouve les stations sur votre route, sans détour. Économies estimées + durée de détour.</div>
+            <span class="feat-tag" style="background:rgba(59,130,246,.15);color:#60A5FA;border-color:rgba(59,130,246,.25)">IA embarquée</span>
+          </div>
+          <div class="feat-card reveal" style="--grad-color:rgba(245,158,11,.12)">
+            <div class="feat-icon" style="background:rgba(245,158,11,.2)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <div class="feat-title">Statistiques premium</div>
+            <div class="feat-desc">Graphiques d'évolution des prix avec gradient fill. KPIs mensuels : prix moyen, meilleur trouvé, économies totales.</div>
+            <span class="feat-tag" style="background:rgba(245,158,11,.15);color:#FBBF24;border-color:rgba(245,158,11,.25)">Charts stylisés</span>
+          </div>
+          <div class="feat-card reveal" style="--grad-color:rgba(239,68,68,.12)">
+            <div class="feat-icon" style="background:rgba(239,68,68,.2)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="feat-title">Alertes prix</div>
+            <div class="feat-desc">Définissez vos seuils par carburant. Notification dès qu'une station passe sous votre prix cible.</div>
+            <span class="feat-tag" style="background:rgba(239,68,68,.15);color:#F87171;border-color:rgba(239,68,68,.25)">Notifications</span>
+          </div>
+          <div class="feat-card reveal" style="--grad-color:rgba(236,72,153,.12)">
+            <div class="feat-icon" style="background:rgba(236,72,153,.2)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="feat-title">Gamification</div>
+            <div class="feat-desc">12 badges à débloquer. Fuelo, votre mascotte, célèbre chaque victoire avec des animations et confettis.</div>
+            <span class="feat-tag" style="background:rgba(236,72,153,.15);color:#F472B6;border-color:rgba(236,72,153,.25)">12 badges</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="hiw-bg" id="comment">
+      <div class="container">
+        <div class="reveal" style="text-align:center">
+          <div class="section-label" style="text-align:center">Comment ça marche</div>
+          <h2 class="section-title" style="text-align:center">Simple, rapide, intelligent</h2>
+          <p class="section-sub" style="margin:0 auto">3 secondes suffisent pour trouver le meilleur plein autour de vous.</p>
+        </div>
+        <div class="steps reveal">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-title">Ouvrez le Radar IA</div>
+            <div class="step-desc">Lancez l'analyse. L'animation sonar scanne les stations dans votre rayon (10 à 100 km).</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-title">Comparez le vrai coût</div>
+            <div class="step-desc">Prix à la pompe + coût réel du détour. La moins chère en distance n'est pas toujours la meilleure.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-title">Naviguez en 1 tap</div>
+            <div class="step-desc">Le bouton "Aller" ouvre la navigation vers la station #1. Économies affichées avant de partir.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-title">Gagnez des badges</div>
+            <div class="step-desc">Chaque plein enregistré fait progresser vos réussites. 12 badges à débloquer avec Fuelo.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RADAR SECTION -->
+    <section class="radar-section">
+      <div class="container">
+        <div class="radar-split">
+          <div class="radar-text reveal">
+            <div class="section-label">Radar IA — Écran signature</div>
+            <h2 class="section-title">L'animation sonar<br/>qui vous fait économiser</h2>
+            <div class="feat-list">
+              <div class="feat-item">
+                <div class="feat-item-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B84FF" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 7 16.9"/><path d="M12 6a6 6 0 0 1 4.5 10.1"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:14px;font-weight:700;margin-bottom:3px">Animation sonar 60fps</div>
+                  <div style="font-size:13px;color:rgba(255,255,255,.5)">Balayage rotatif, blips de stations qui apparaissent progressivement</div>
+                </div>
+              </div>
+              <div class="feat-item">
+                <div class="feat-item-icon" style="background:rgba(0,212,170,.2)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00D4AA" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:14px;font-weight:700;margin-bottom:3px">Podium visuel top 3</div>
+                  <div style="font-size:13px;color:rgba(255,255,255,.5)">Station #1 en grande card. #2 et #3 en cards secondaires</div>
+                </div>
+              </div>
+              <div class="feat-item">
+                <div class="feat-item-icon" style="background:rgba(34,197,94,.2)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:14px;font-weight:700;margin-bottom:3px">Counter animé des économies</div>
+                  <div style="font-size:13px;color:rgba(255,255,255,.5)">Comptage fluide CHF 0.00 → CHF 4.20 avec easing cubic</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="radar-visual reveal">
+            <div class="radar-ring">
+              <canvas id="vitrine-radar" width="280" height="280" style="border-radius:50%;display:block;border:1px solid rgba(108,99,255,.2)"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BADGES / SAVINGS -->
+    <section class="badges-section" id="badges">
+      <div class="container">
+        <div class="badges-grid">
+          <div class="reveal">
+            <div class="section-label">Gamification</div>
+            <h2 class="section-title">Économisez,<br/>collectez, progressez</h2>
+            <p class="section-sub">Chaque plein enregistré vous rapproche d'un nouveau badge.</p>
+            <div class="savings-card" style="margin-top:32px">
+              <div style="font-size:11px;font-weight:700;color:#00D4AA;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Ce mois</div>
+              <div style="font-size:48px;font-weight:900;color:#00D4AA;letter-spacing:-2px;line-height:1">CHF 47.30</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:6px">économisés vs. prix moyen · 14 pleins</div>
+              <div style="display:flex;gap:12px;margin-top:16px">
+                <div style="flex:1;background:rgba(0,212,170,.1);border-radius:12px;padding:10px">
+                  <div style="font-size:20px;font-weight:900;color:#00D4AA">1.720</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.4)">Meilleur prix trouvé</div>
+                </div>
+                <div style="flex:1;background:rgba(255,255,255,.06);border-radius:12px;padding:10px">
+                  <div style="font-size:20px;font-weight:900">182 L</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.4)">Volume total</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="reveal">
+            <div style="margin-bottom:20px">
+              <div style="font-size:16px;font-weight:700;margin-bottom:4px">12 badges à débloquer</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.45)">Chaque badge a ses couleurs et son animation d'unlock</div>
+            </div>
+            <div class="badge-showcase" style="margin-bottom:20px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div class="bs-badge" style="background:linear-gradient(135deg,#FFD700,#FF8C00);border:1px solid rgba(255,215,0,.4);box-shadow:0 4px 16px rgba(255,215,0,.3)">
+                  <div class="bs-glow"></div>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/></svg>
+                </div>
+                <div style="font-size:10px;font-weight:600;text-align:center;color:rgba(255,255,255,.8)">Premier Plein</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div class="bs-badge" style="background:linear-gradient(135deg,#22C55E,#16A34A);border:1px solid rgba(34,197,94,.4);box-shadow:0 4px 16px rgba(34,197,94,.3)">
+                  <div class="bs-glow" style="border-color:rgba(34,197,94,.3)"></div>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div style="font-size:10px;font-weight:600;text-align:center;color:rgba(255,255,255,.8)">Économe</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div class="bs-badge" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8);border:1px solid rgba(59,130,246,.4);box-shadow:0 4px 16px rgba(59,130,246,.3)">
+                  <div class="bs-glow" style="border-color:rgba(59,130,246,.3)"></div>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+                </div>
+                <div style="font-size:10px;font-weight:600;text-align:center;color:rgba(255,255,255,.8)">Explorateur</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div class="bs-badge" style="background:linear-gradient(135deg,#EF4444,#DC2626);border:1px solid rgba(239,68,68,.4);box-shadow:0 4px 16px rgba(239,68,68,.3)">
+                  <div class="bs-glow" style="border-color:rgba(239,68,68,.3)"></div>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="22"/><line x1="2" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/></svg>
+                </div>
+                <div style="font-size:10px;font-weight:600;text-align:center;color:rgba(255,255,255,.8)">Chasseur</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div class="bs-badge locked" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" opacity=".4"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 7 16.9"/></svg>
+                </div>
+                <div style="font-size:10px;font-weight:600;text-align:center;color:rgba(255,255,255,.3)">Radar Addict</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div class="bs-badge locked" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" opacity=".4"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0"/></svg>
+                </div>
+                <div style="font-size:10px;font-weight:600;text-align:center;color:rgba(255,255,255,.3)">Fidèle</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div class="bs-badge locked" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" opacity=".4"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </div>
+                <div style="font-size:10px;font-weight:600;text-align:center;color:rgba(255,255,255,.3)">Communauté</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div class="bs-badge locked" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" opacity=".4"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div style="font-size:10px;font-weight:600;text-align:center;color:rgba(255,255,255,.3)">Vétéran</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.2);border-radius:20px;padding:16px">
+              <div style="animation:fueloDance 2.5s ease-in-out infinite;flex-shrink:0">
+                <svg width="52" height="68" viewBox="0 0 80 104" fill="none">
+                  <defs><linearGradient id="vf" x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8B84FF"/><stop offset="100%" stop-color="#4338CA"/></linearGradient></defs>
+                  <path d="M40 6 C24 6, 8 30, 8 52 C8 74, 22 96, 40 96 C58 96, 72 74, 72 52 C72 30, 56 6, 40 6Z" fill="url(#vf)"/>
+                  <ellipse cx="28" cy="36" rx="9" ry="14" fill="rgba(255,255,255,.15)" transform="rotate(-20 28 36)"/>
+                  <circle cx="29" cy="54" r="7" fill="#0A0A0F"/><circle cx="51" cy="54" r="7" fill="#0A0A0F"/>
+                  <circle cx="31" cy="52" r="3" fill="#00D4AA"/><circle cx="53" cy="52" r="3" fill="#00D4AA"/>
+                  <path d="M31 67 Q40 76 49 67" stroke="#0A0A0F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                  <line x1="40" y1="6" x2="40" y2="-1" stroke="#8B84FF" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="40" cy="-2" r="5" fill="#00D4AA"/>
+                </svg>
+              </div>
+              <div>
+                <div style="font-size:15px;font-weight:800;margin-bottom:4px">Fuelo 👋</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.5">Votre compagnon de route. Il célèbre chaque badge débloqué et vous encourage à économiser.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section style="background:#0F0F1A">
+      <div class="container">
+        <div class="reveal" style="text-align:center">
+          <div class="section-label" style="text-align:center">Chiffres clés</div>
+          <h2 class="section-title" style="text-align:center">Conçu pour les routes suisses</h2>
+        </div>
+        <div class="stats-row reveal">
+          <div class="stat-card">
+            <div class="stat-num" style="background:linear-gradient(135deg,#8B84FF,#00D4AA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">3 000<span style="-webkit-text-fill-color:#00D4AA;font-size:28px">+</span></div>
+            <div class="stat-label">Stations en Suisse via API TCS</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" style="color:#00D4AA">CHF 47</div>
+            <div class="stat-label">Économies moyennes par mois</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">60fps</div>
+            <div class="stat-label">Radar IA — Canvas animation</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" style="color:#6C63FF">12</div>
+            <div class="stat-label">Badges de gamification</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA / INSTALL -->
+    <section class="cta-section" id="cta">
+      <div class="cta-inner reveal">
+        <div style="font-size:48px;margin-bottom:16px;animation:fueloDance 2s ease-in-out infinite;display:inline-block">
+          <svg width="60" height="78" viewBox="0 0 80 104" fill="none">
+            <defs><linearGradient id="cf" x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8B84FF"/><stop offset="100%" stop-color="#4338CA"/></linearGradient></defs>
+            <path d="M40 6 C24 6, 8 30, 8 52 C8 74, 22 96, 40 96 C58 96, 72 74, 72 52 C72 30, 56 6, 40 6Z" fill="url(#cf)"/>
+            <circle cx="29" cy="54" r="7" fill="#0A0A0F"/><circle cx="51" cy="54" r="7" fill="#0A0A0F"/>
+            <circle cx="31" cy="52" r="3" fill="#00D4AA"/><circle cx="53" cy="52" r="3" fill="#00D4AA"/>
+            <path d="M31 67 Q40 76 49 67" stroke="#0A0A0F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <line x1="40" y1="6" x2="40" y2="-1" stroke="#8B84FF" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="40" cy="-2" r="5" fill="#00D4AA"/>
+          </svg>
+        </div>
+        <h2 class="cta-title">Prêt à économiser<br/><em style="background:linear-gradient(135deg,#8B84FF,#00D4AA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:normal">sur chaque plein</em> ?</h2>
+        <p class="cta-sub">OptiTank est une Progressive Web App — installez-la directement depuis votre navigateur, sans passer par un store.</p>
+        <div class="cta-store-btns">
+          <div class="store-btn" style="flex-direction:column;align-items:flex-start;gap:8px;border-color:rgba(108,99,255,.3);background:rgba(108,99,255,.1)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83z"/></svg>
+              <div style="font-size:15px;font-weight:700">Sur iPhone / Safari</div>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5">Appuyez sur <strong style="color:#fff">Partager</strong> → <strong style="color:#fff">Sur l'écran d'accueil</strong></div>
+          </div>
+          <div class="store-btn" style="flex-direction:column;align-items:flex-start;gap:8px;border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.08)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3.18 23.4c.3.17.64.2.96.07l13.34-7.5-3.08-3.09L3.18 23.4z" fill="#EA4335"/><path d="M21.77 10.3a2.3 2.3 0 0 0-1.02-1.8l-2.27-1.28-3.43 3.43 3.43 3.43 2.3-1.3c.64-.36 1.03-1.04.99-1.78z" fill="#FBBC05"/><path d="M2.22.6a2.1 2.1 0 0 0-.04 2.44l11.22 11.23 3.08-3.08L3.18.53A1.03 1.03 0 0 0 2.22.6z" fill="#4285F4"/><path d="M2.18.56C1.86.73 1.62 1.08 1.62 1.5v21c0 .42.24.77.56.94l.04.02 11.76-11.76v-.28L2.18.56z" fill="#34A853"/></svg>
+              <div style="font-size:15px;font-weight:700">Sur Android / Chrome</div>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5">Menu <strong style="color:#fff">⋮</strong> → <strong style="color:#fff">Ajouter à l'écran d'accueil</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="logo">
+        <img src="/logo-nobg.svg" alt="OptiTank" class="logo-mark" style="width:28px;height:28px;" />
+        <span class="logo-text" style="font-size:16px">OptiTank<span>.</span></span>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Fonctionnalités</a>
+        <a href="#comment">Comment ça marche</a>
+        <a href="#cta">Installer</a>
+        <a href="/privacy.html">Politique de confidentialité</a>
+        <a href="/terms.html">Conditions d'utilisation</a>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,.25)">© 2026 OptiTank · Suisse</div>
+    </footer>
+
+  </div>
+
+  <div id="app" style="display: none;">
+    <!-- Main Content Area -->
+    <main id="main-content">
+      <!-- Views will be injected here by JS -->
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-view="radar" aria-label="Radar">
+        <div class="icon-container">
+          <i class="ph-bold ph-broadcast"></i>
+        </div>
+      </button>
+      <button class="nav-item" data-view="route" aria-label="Trajets">
+        <div class="icon-container">
+          <i class="ph-bold ph-map-trifold"></i>
+        </div>
+      </button>
+
+      <button class="nav-item" data-view="map" aria-label="Carte">
+        <div class="icon-container">
+          <i class="ph-bold ph-map-pin"></i>
+        </div>
+      </button>
+      <button class="nav-item" data-view="profile" aria-label="Profil">
+        <div class="icon-container">
+          <i class="ph-bold ph-user"></i>
+        </div>
+      </button>
+    </nav>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

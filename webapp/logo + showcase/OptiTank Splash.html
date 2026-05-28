@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OptiTank — Splash Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;min-height:100vh;
+  background:#030305;
+  display:flex;flex-direction:column;align-items:center;
+  font-family:'Inter',sans-serif;overflow-x:hidden;
+  padding-bottom:60px;
+}
+
+/* ─── OUTER BG ─── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 30% 20%,rgba(108,99,255,.12),transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 80%,rgba(0,212,170,.07),transparent 55%);
+}
+
+/* ─── CONTROLS ─── */
+.controls{
+  position:relative;z-index:10;
+  padding:16px 24px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  width:100%;max-width:900px;
+}
+.ctrl-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.07em;text-transform:uppercase}
+.ctrl-btn{
+  padding:7px 18px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.1);background:transparent;
+  color:rgba(255,255,255,.55);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s;
+}
+.ctrl-btn.active{background:#6C63FF;border-color:#6C63FF;color:#fff;box-shadow:0 3px 14px rgba(108,99,255,.4)}
+.ctrl-btn:hover:not(.active){background:rgba(255,255,255,.07);color:#fff}
+.ctrl-sep{width:1px;height:18px;background:rgba(255,255,255,.08)}
+.replay-btn{
+  margin-left:auto;
+  display:flex;align-items:center;gap:7px;
+  padding:8px 20px;border-radius:999px;
+  background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.35);
+  color:#8B84FF;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s;
+}
+.replay-btn:hover{background:rgba(108,99,255,.25);color:#fff}
+
+/* ─── PHONE SHELL ─── */
+.phone-stage{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:center;gap:28px;
+}
+.phone-outer{
+  position:relative;
+  transform-origin:top center;
+}
+.phone{
+  width:393px;height:852px;
+  border-radius:54px;
+  background:#0A0A0F;
+  position:relative;overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.13),
+    0 0 0 9px #141420,
+    0 0 0 10px rgba(255,255,255,.06),
+    0 50px 120px rgba(0,0,0,.8),
+    0 0 80px rgba(108,99,255,.18);
+  flex-shrink:0;
+}
+
+/* Dynamic Island */
+.di{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  width:126px;height:36px;background:#000;border-radius:20px;z-index:200;
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.07);
+  display:flex;align-items:center;justify-content:center;
+}
+.di-cam{
+  width:12px;height:12px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#2A2A3A,#0A0A0F);
+  border:1px solid rgba(255,255,255,.06);position:relative;
+}
+.di-cam::after{content:'';position:absolute;inset:30%;border-radius:50%;background:#1A2040}
+
+/* Status bar */
+.status-bar{
+  position:absolute;top:0;left:0;right:0;height:54px;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 28px 8px;z-index:190;pointer-events:none;
+}
+.sb-time{font-size:15px;font-weight:600;color:white;font-family:-apple-system,'SF Pro',system-ui}
+.sb-icons{display:flex;align-items:center;gap:6px;opacity:.9}
+
+/* Home bar */
+.home-bar{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  width:134px;height:5px;background:rgba(255,255,255,.28);border-radius:3px;z-index:200;
+}
+
+/* ═══════════════════════════════════════════
+   SPLASH SCREEN LAYER
+═══════════════════════════════════════════ */
+.splash{
+  position:absolute;inset:0;z-index:100;
+  background:#07070D;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;
+}
+
+/* BG particles */
+.particle{
+  position:absolute;border-radius:50%;pointer-events:none;
+}
+
+/* Radial glow behind logo */
+.s-glow{
+  position:absolute;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(108,99,255,.35),transparent 65%);
+  opacity:0;
+}
+.s-glow-teal{
+  position:absolute;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,170,.22),transparent 65%);
+  opacity:0;
+}
+
+/* Logo icon */
+.s-icon{
+  position:relative;z-index:2;
+  opacity:0;
+  transform:scale(.5) translateY(12px);
+}
+
+/* Glow ring around icon */
+.s-icon-ring{
+  position:absolute;inset:-12px;border-radius:50%;
+  border:2px solid rgba(108,99,255,.3);opacity:0;
+}
+
+/* Wordmark */
+.s-wordmark{
+  position:relative;z-index:2;
+  margin-top:22px;
+  opacity:0;transform:translateY(18px);
+}
+.s-wordmark-text{
+  font-size:38px;font-weight:900;color:#fff;letter-spacing:-.8px;
+}
+.s-wordmark-text span{color:#6C63FF}
+
+/* Tagline */
+.s-tagline{
+  margin-top:10px;
+  font-size:14px;font-weight:500;color:rgba(255,255,255,.38);
+  letter-spacing:.04em;
+  opacity:0;z-index:2;
+}
+
+/* Loading dots */
+.s-dots{
+  position:absolute;bottom:72px;
+  display:flex;gap:9px;opacity:0;
+}
+.s-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(255,255,255,.25);
+}
+
+/* Exit */
+.splash.exiting{
+  animation:splashExit .55s cubic-bezier(.4,0,.6,1) forwards;
+}
+@keyframes splashExit{
+  0%  {opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.08)}
+}
+
+/* ═══════════════════════════════════════════
+   APP LAYER (post-splash)
+═══════════════════════════════════════════ */
+.app-layer{
+  position:absolute;inset:0;z-index:50;
+  background:#0A0A0F;
+  opacity:0;
+  display:flex;flex-direction:column;
+  padding-top:54px;
+  transition:opacity .4s ease .1s;
+}
+.app-layer.visible{opacity:1}
+
+/* App content */
+.app-header{
+  padding:14px 20px 0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.app-logo-row{display:flex;align-items:center;gap:8px}
+.app-logo-text{font-size:19px;font-weight:800;color:#fff;letter-spacing:-.4px}
+.app-logo-text span{color:#6C63FF}
+
+.app-radar-label{
+  padding:16px 20px 4px;
+}
+.app-radar-title{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.4px}
+.app-radar-sub{font-size:13px;color:rgba(255,255,255,.35);margin-top:2px}
+
+/* Savings banner */
+.app-savings{
+  margin:12px 16px;
+  background:linear-gradient(135deg,rgba(0,212,170,.18),rgba(34,197,94,.08));
+  border:1px solid rgba(0,212,170,.3);border-radius:20px;padding:14px 18px;text-align:center;
+  animation:fadeSlideUp .4s ease .2s both;
+}
+.app-sav-label{font-size:11px;font-weight:700;color:#00D4AA;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.app-sav-num{font-size:42px;font-weight:900;color:#00D4AA;letter-spacing:-1.5px;line-height:1}
+.app-sav-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:4px}
+
+/* Result #1 */
+.app-r1{
+  margin:0 16px 8px;
+  background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(34,197,94,.06));
+  border:1px solid rgba(34,197,94,.38);border-radius:20px;padding:14px 16px;
+  animation:fadeSlideUp .4s ease .35s both;
+}
+.app-r1-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.app-r1-badge{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#22C55E,#16A34A);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 3px 12px rgba(34,197,94,.4)}
+.app-r1-name{font-size:15px;font-weight:800;color:#fff;flex:1}
+.app-r1-dist{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px}
+.app-r1-price{font-size:24px;font-weight:900;color:#22C55E;text-align:right;line-height:1}
+.app-r1-unit{font-size:11px;color:rgba(255,255,255,.35);text-align:right}
+.app-r1-btn{
+  background:linear-gradient(135deg,#33DFBE,#00D4AA);border-radius:999px;
+  padding:10px;text-align:center;font-size:14px;font-weight:800;color:#fff;
+}
+
+.app-r-sm{
+  margin:0 16px 6px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:10px;
+  animation:fadeSlideUp .4s ease .45s both;
+}
+.app-r-sm-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0}
+.app-r-sm-name{flex:1;font-size:13px;font-weight:600;color:#fff}
+.app-r-sm-price{font-size:18px;font-weight:800}
+
+/* Nav */
+.app-nav{
+  position:absolute;bottom:0;left:0;right:0;padding:6px 10px 28px;
+  background:linear-gradient(transparent,rgba(10,10,15,.98) 40%);
+}
+.app-nav-inner{
+  display:flex;background:rgba(14,14,22,.95);border-radius:999px;padding:6px;gap:4px;
+  border:1px solid rgba(108,99,255,.22);
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+  animation:fadeSlideUp .4s ease .6s both;
+}
+.app-nav-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;padding:7px 4px;border-radius:999px;border:none;background:transparent;
+}
+.app-nav-tab.on{
+  background:#6C63FF;
+  box-shadow:0 2px 12px rgba(108,99,255,.5);
+  flex-direction:row;padding:7px 12px;
+}
+.app-nav-tab.on span{font-size:10px;color:white;font-weight:700}
+
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── CODE SECTION ─── */
+.code-section{
+  position:relative;z-index:1;
+  width:100%;max-width:900px;
+  padding:0 24px;margin-top:32px;
+  display:grid;grid-template-columns:1fr 1fr;gap:20px;
+}
+.code-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;padding:20px;
+}
+.code-card-title{
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(255,255,255,.35);margin-bottom:12px;
+}
+.code-block{
+  background:#060612;border:1px solid rgba(108,99,255,.18);border-radius:12px;
+  padding:14px 16px;font-family:'SF Mono','Fira Code',monospace;
+  font-size:11.5px;line-height:1.7;color:rgba(255,255,255,.65);
+  overflow-x:auto;white-space:pre;
+}
+.k{color:#8B84FF}.s{color:#00D4AA}.c{color:rgba(255,255,255,.3);font-style:italic}.n{color:#F59E0B}
+
+/* ─── NAVBAR PREVIEW ─── */
+.navbar-section{
+  position:relative;z-index:1;
+  width:100%;max-width:900px;padding:0 24px;margin-top:24px;
+}
+.navbar-demo{
+  display:flex;flex-direction:column;gap:12px;
+}
+.navbar-item{
+  border-radius:14px;padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.navbar-logo{display:flex;align-items:center;gap:10px}
+
+/* ─── RESPONSIVE SCALE ─── */
+@media(max-height:900px){
+  .phone-outer{transform-origin:top center}
+}
+</style>
+</head>
+<body>
+
+<!-- Controls -->
+<div class="controls">
+  <span class="ctrl-label">Vitesse</span>
+  <button class="ctrl-btn" onclick="setSpeed(.5)" id="sp05">0.5×</button>
+  <button class="ctrl-btn active" onclick="setSpeed(1)" id="sp1">1×</button>
+  <button class="ctrl-btn" onclick="setSpeed(2)" id="sp2">2×</button>
+  <div class="ctrl-sep"></div>
+  <span class="ctrl-label">Transition</span>
+  <button class="ctrl-btn active" id="ts-scale" onclick="setTransition('scale')">Scale</button>
+  <button class="ctrl-btn" id="ts-fade" onclick="setTransition('fade')">Fade</button>
+  <button class="ctrl-btn" id="ts-slide" onclick="setTransition('slide')">Slide up</button>
+  <button class="replay-btn" onclick="replaySplash()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.7"/></svg>
+    Rejouer
+  </button>
+</div>
+
+<!-- Phone -->
+<div class="phone-stage" id="phoneStage">
+  <div class="phone-outer" id="phoneOuter">
+    <div class="phone">
+      <!-- Dynamic Island -->
+      <div class="di"><div class="di-cam"></div></div>
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span class="sb-time" id="sbTime">22:16</span>
+        <div class="sb-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="white" opacity=".9">
+            <rect x="0" y="8" width="3" height="4" rx=".6" opacity=".4"/>
+            <rect x="4.5" y="5" width="3" height="7" rx=".6" opacity=".6"/>
+            <rect x="9" y="2" width="3" height="10" rx=".6"/>
+            <rect x="13.5" y="0" width="3" height="12" rx=".6"/>
+          </svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="white" opacity=".9">
+            <path d="M8 9.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+            <path d="M3.5 6.5A6.5 6.5 0 0 1 8 4.7a6.5 6.5 0 0 1 4.5 1.8l1.2-1.3A8.3 8.3 0 0 0 8 3a8.3 8.3 0 0 0-5.7 2.2z" opacity=".5"/>
+            <path d="M5.3 8.3A3.8 3.8 0 0 1 8 7.2c1.06 0 2 .4 2.7 1.1l1.2-1.2A5.5 5.5 0 0 0 8 5.5a5.5 5.5 0 0 0-3.9 1.6z" opacity=".75"/>
+          </svg>
+          <svg width="27" height="13" viewBox="0 0 27 13" fill="white">
+            <rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="white" stroke-opacity=".35" fill="none"/>
+            <rect x="2" y="2" width="18" height="9" rx="2" fill="white"/>
+            <path d="M25 4.5v4c.8-.3 1.5-1.2 1.5-2s-.7-1.7-1.5-2z" fill="white" opacity=".4"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- APP LAYER -->
+      <div class="app-layer" id="appLayer">
+        <!-- Header -->
+        <div class="app-header">
+          <div class="app-logo-row">
+            <svg width="28" height="28" viewBox="0 0 80 104" fill="none">
+              <defs>
+                <linearGradient id="al-g" x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#A8A3FF"/><stop offset="100%" stop-color="#4338CA"/>
+                </linearGradient>
+                <radialGradient id="al-t" cx="38%" cy="34%" r="66%">
+                  <stop offset="0%" stop-color="#4EECD4"/><stop offset="100%" stop-color="#009E80"/>
+                </radialGradient>
+              </defs>
+              <path d="M40 6C24 6 8 30 8 52 8 74 22 96 40 96 58 96 72 74 72 52 72 30 56 6 40 6Z" fill="url(#al-g)"/>
+              <circle cx="40" cy="60" r="22" fill="none" stroke="#00D4AA" stroke-width="1.8" opacity=".38"/>
+              <circle cx="40" cy="60" r="14" fill="none" stroke="#00D4AA" stroke-width="2" opacity=".58"/>
+              <circle cx="40" cy="60" r="6.5" fill="#00D4AA"/>
+              <line x1="40" y1="6" x2="40" y2="0" stroke="#8B84FF" stroke-width="5" stroke-linecap="round"/>
+              <circle cx="40" cy="-2" r="6" fill="url(#al-t)"/>
+            </svg>
+            <span class="app-logo-text">OptiTank<span>.</span></span>
+          </div>
+          <div style="animation:fuelDance 2.5s ease-in-out infinite">
+            <svg width="28" height="36" viewBox="0 0 80 104" fill="none">
+              <defs><linearGradient id="af-g" x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#9D97FF"/><stop offset="100%" stop-color="#4338CA"/></linearGradient></defs>
+              <path d="M40 6C24 6 8 30 8 52 8 74 22 96 40 96 58 96 72 74 72 52 72 30 56 6 40 6Z" fill="url(#af-g)"/>
+              <circle cx="29" cy="54" r="7" fill="#0A0A0F"/><circle cx="51" cy="54" r="7" fill="#0A0A0F"/>
+              <circle cx="31" cy="52" r="3" fill="#00D4AA"/><circle cx="53" cy="52" r="3" fill="#00D4AA"/>
+              <path d="M31 67Q40 76 49 67" stroke="#0A0A0F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <line x1="40" y1="6" x2="40" y2="0" stroke="#8B84FF" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="40" cy="-2" r="4.5" fill="#00D4AA"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Radar label -->
+        <div class="app-radar-label">
+          <div class="app-radar-title">Radar IA</div>
+          <div class="app-radar-sub">Prix pompe + coût du détour</div>
+        </div>
+
+        <!-- Savings -->
+        <div class="app-savings">
+          <div class="app-sav-label">Vous économisez</div>
+          <div class="app-sav-num">CHF 4.20</div>
+          <div class="app-sav-sub">vs. prix moyen autour de vous</div>
+        </div>
+
+        <!-- Result #1 -->
+        <div class="app-r1">
+          <div class="app-r1-row">
+            <div class="app-r1-badge">1</div>
+            <div style="flex:1">
+              <div class="app-r1-name">Avia Cheseaux</div>
+              <div class="app-r1-dist">2.3 km · Sur votre trajet</div>
+            </div>
+            <div>
+              <div class="app-r1-price">1.720</div>
+              <div class="app-r1-unit">CHF/L</div>
+            </div>
+          </div>
+          <div class="app-r1-btn">⚡ Aller maintenant →</div>
+        </div>
+
+        <!-- Results 2 + 3 -->
+        <div class="app-r-sm">
+          <div class="app-r-sm-num" style="background:rgba(34,197,94,.3)">2</div>
+          <div>
+            <div class="app-r-sm-name">Migrol Cossonay</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.35)">4.8 km · +3 min</div>
+          </div>
+          <div class="app-r-sm-price" style="color:#22C55E">1.790</div>
+        </div>
+        <div class="app-r-sm">
+          <div class="app-r-sm-num" style="background:rgba(245,158,11,.3)">3</div>
+          <div>
+            <div class="app-r-sm-name">BP Echallens</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.35)">7.1 km · +5 min</div>
+          </div>
+          <div class="app-r-sm-price" style="color:#F59E0B">1.880</div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="app-nav">
+          <div class="app-nav-inner">
+            <div class="app-nav-tab on">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 7 16.9"/><path d="M12 6a6 6 0 0 1 4.5 10.1"/></svg>
+              <span>Radar IA</span>
+            </div>
+            <div class="app-nav-tab"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg></div>
+            <div class="app-nav-tab"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/></svg></div>
+            <div class="app-nav-tab"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="app-nav-tab"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPLASH LAYER -->
+      <div class="splash" id="splash">
+        <!-- Particles -->
+        <div class="particle" style="width:4px;height:4px;background:rgba(108,99,255,.4);top:18%;left:12%;animation:pFloat 3.8s ease-in-out 0.9s infinite"></div>
+        <div class="particle" style="width:3px;height:3px;background:rgba(0,212,170,.35);top:25%;left:78%;animation:pFloat 4.2s ease-in-out 0.3s infinite"></div>
+        <div class="particle" style="width:5px;height:5px;background:rgba(108,99,255,.25);top:68%;left:88%;animation:pFloat 3.5s ease-in-out 1.2s infinite"></div>
+        <div class="particle" style="width:3px;height:3px;background:rgba(0,212,170,.3);top:72%;left:10%;animation:pFloat 4.6s ease-in-out 0.6s infinite"></div>
+        <div class="particle" style="width:4px;height:4px;background:rgba(139,132,255,.3);top:40%;left:6%;animation:pFloat 3.9s ease-in-out 1.8s infinite"></div>
+        <div class="particle" style="width:3px;height:3px;background:rgba(0,212,170,.25);top:32%;left:90%;animation:pFloat 4.1s ease-in-out 0s infinite"></div>
+        <div class="particle" style="width:6px;height:6px;background:rgba(108,99,255,.15);top:82%;left:48%;animation:pFloat 5s ease-in-out 2.2s infinite"></div>
+        <div class="particle" style="width:3px;height:3px;background:rgba(255,255,255,.1);top:14%;left:55%;animation:pFloat 3.7s ease-in-out 1.5s infinite"></div>
+        <div class="particle" style="width:4px;height:4px;background:rgba(108,99,255,.3);top:58%;left:24%;animation:pFloat 4.3s ease-in-out 0.8s infinite"></div>
+        <div class="particle" style="width:3px;height:3px;background:rgba(0,212,170,.3);top:48%;left:72%;animation:pFloat 3.6s ease-in-out 2.5s infinite"></div>
+        <div class="particle" style="width:5px;height:5px;background:rgba(139,132,255,.2);top:88%;left:30%;animation:pFloat 4.8s ease-in-out 1s infinite"></div>
+        <div class="particle" style="width:3px;height:3px;background:rgba(255,255,255,.08);top:8%;left:35%;animation:pFloat 4s ease-in-out 3s infinite"></div>
+
+        <!-- Main glow -->
+        <div class="s-glow" id="sGlow" style="width:480px;height:480px"></div>
+        <div class="s-glow-teal" id="sGlowTeal" style="width:320px;height:320px"></div>
+
+        <!-- Logo mark — teardrop pur, sans fond/cadre -->
+        <div class="s-icon" id="sIcon" style="position:relative">
+          <!-- Soft glow ring derrière la goutte -->
+          <div class="s-icon-ring" id="sRing" style="width:210px;height:230px;border-radius:50%;inset:auto;top:-28px;left:-32px;position:absolute;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%"></div>
+          <!-- Teardrop SVG — forme pure, pas de carré -->
+          <svg width="130" height="168" viewBox="0 0 130 168" fill="none">
+            <defs>
+              <linearGradient id="sp-drop" x1="0%" y1="0%" x2="25%" y2="100%">
+                <stop offset="0%" stop-color="#B0ABFF"/>
+                <stop offset="40%" stop-color="#6C63FF"/>
+                <stop offset="100%" stop-color="#3328B8"/>
+              </linearGradient>
+              <radialGradient id="sp-hl" cx="32%" cy="26%" r="52%">
+                <stop offset="0%" stop-color="rgba(255,255,255,0.28)"/>
+                <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+              </radialGradient>
+              <radialGradient id="sp-teal" cx="38%" cy="34%" r="66%">
+                <stop offset="0%" stop-color="#5FF0D8"/>
+                <stop offset="100%" stop-color="#009E80"/>
+              </radialGradient>
+              <filter id="sp-drop-shadow" x="-30%" y="-15%" width="160%" height="140%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="blur"/>
+                <feColorMatrix in="blur" type="matrix"
+                  values="0 0 0 0 0.42  0 0 0 0 0.38  0 0 0 0 1  0 0 0 0.7 0" result="s"/>
+                <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="sp-tglow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="sp-antglow" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            <!-- Teardrop body -->
+            <path d="M65 10 C48 10 20 42 20 76 C20 112 38 152 65 152 C92 152 110 112 110 76 C110 42 82 10 65 10 Z"
+              fill="url(#sp-drop)" filter="url(#sp-drop-shadow)"/>
+            <!-- Shoulder highlight -->
+            <path d="M65 10 C48 10 20 42 20 76 C20 112 38 152 65 152 C92 152 110 112 110 76 C110 42 82 10 65 10 Z"
+              fill="url(#sp-hl)"/>
+
+            <!-- Radar rings inside the drop -->
+            <g filter="url(#sp-tglow)">
+              <circle cx="65" cy="95" r="32" fill="none" stroke="#00D4AA" stroke-width="1.2" opacity="0.22"/>
+              <circle cx="65" cy="95" r="21" fill="none" stroke="#00D4AA" stroke-width="1.4" opacity="0.38"/>
+              <circle cx="65" cy="95" r="11" fill="none" stroke="#00D4AA" stroke-width="1.6" opacity="0.60"/>
+            </g>
+            <!-- Central blip -->
+            <circle cx="65" cy="95" r="7" fill="rgba(0,212,170,0.22)"/>
+            <circle cx="65" cy="95" r="4.5" fill="#00D4AA"/>
+            <circle cx="62.5" cy="92.5" r="1.8" fill="white" opacity="0.60"/>
+
+            <!-- Antenna stem -->
+            <line x1="65" y1="10" x2="65" y2="2"
+              stroke="#8B84FF" stroke-width="4.5" stroke-linecap="round"/>
+
+            <!-- Antenna ball glow -->
+            <circle cx="65" cy="-4" r="10" fill="rgba(0,212,170,0.22)" filter="url(#sp-antglow)"/>
+            <!-- Antenna ball -->
+            <circle cx="65" cy="-4" r="8" fill="url(#sp-teal)"/>
+            <!-- Specular -->
+            <circle cx="62" cy="-7" r="3" fill="white" opacity="0.52"/>
+          </svg>
+        </div>
+
+        <!-- Wordmark -->
+        <div class="s-wordmark" id="sWordmark">
+          <div class="s-wordmark-text">OptiTank<span>.</span></div>
+        </div>
+
+        <!-- Tagline -->
+        <div class="s-tagline" id="sTagline">Carburant intelligent · Suisse 🇨🇭</div>
+
+        <!-- Loading dots -->
+        <div class="s-dots" id="sDots">
+          <div class="s-dot" id="d1"></div>
+          <div class="s-dot" id="d2"></div>
+          <div class="s-dot" id="d3"></div>
+        </div>
+      </div>
+
+      <!-- Home bar -->
+      <div class="home-bar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Code snippets + Navbar -->
+<div class="code-section">
+  <div class="code-card">
+    <div class="code-card-title">Splash screen web (PWA)</div>
+    <div class="code-block"><span class="c">/* HTML — overlay au-dessus du root */</span>
+<span class="k">&lt;div</span> id=<span class="s">"splash"</span><span class="k">&gt;</span>
+  <span class="k">&lt;img</span> src=<span class="s">"/logo.svg"</span> width=<span class="n">120</span> height=<span class="n">120</span><span class="k">/&gt;</span>
+  <span class="k">&lt;span</span> class=<span class="s">"wordmark"</span><span class="k">&gt;</span>OptiTank.<span class="k">&lt;/span&gt;</span>
+<span class="k">&lt;/div&gt;</span>
+
+<span class="c">/* JS — cache après hydratation */</span>
+<span class="k">window</span>.addEventListener(<span class="s">'load'</span>, () <span class="k">=&gt;</span> {
+  <span class="k">const</span> el = document.getElementById(<span class="s">'splash'</span>);
+  setTimeout(() <span class="k">=&gt;</span> {
+    el.classList.add(<span class="s">'exit'</span>);
+    setTimeout(() <span class="k">=&gt;</span> el.remove(), <span class="n">500</span>);
+  }, <span class="n">2000</span>);
+});</div>
+  </div>
+
+  <div class="code-card">
+    <div class="code-card-title">Navbar site — 3 variantes</div>
+    <!-- Navbar dark -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.25);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Dark</div>
+        <div class="navbar-item" style="background:#0A0A0F;border:1px solid rgba(255,255,255,.07)">
+          <div class="navbar-logo">
+            <svg width="28" height="28" viewBox="0 0 80 104" fill="none">
+              <defs>
+                <linearGradient id="nb1-g" x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A8A3FF"/><stop offset="100%" stop-color="#4338CA"/></linearGradient>
+                <radialGradient id="nb1-t" cx="38%" cy="34%" r="66%"><stop offset="0%" stop-color="#4EECD4"/><stop offset="100%" stop-color="#009E80"/></radialGradient>
+              </defs>
+              <path d="M40 6C24 6 8 30 8 52 8 74 22 96 40 96 58 96 72 74 72 52 72 30 56 6 40 6Z" fill="url(#nb1-g)"/>
+              <circle cx="40" cy="58" r="14" fill="none" stroke="#00D4AA" stroke-width="2" opacity=".4"/><circle cx="40" cy="58" r="7" fill="#00D4AA"/>
+              <line x1="40" y1="6" x2="40" y2="0" stroke="#8B84FF" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="40" cy="-2" r="5" fill="url(#nb1-t)"/>
+            </svg>
+            <span style="font-size:18px;font-weight:900;color:#fff;letter-spacing:-.4px">OptiTank<span style="color:#6C63FF">.</span></span>
+          </div>
+          <div style="display:flex;gap:24px">
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,.5)">Radar</span>
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,.5)">Carte</span>
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,.5)">Stats</span>
+          </div>
+          <div style="background:#6C63FF;border-radius:999px;padding:7px 16px;font-size:13px;font-weight:700;color:#fff">Télécharger</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.25);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Light</div>
+        <div class="navbar-item" style="background:#fff;border:1px solid rgba(0,0,0,.07)">
+          <div class="navbar-logo">
+            <svg width="28" height="28" viewBox="0 0 80 104" fill="none">
+              <defs>
+                <linearGradient id="nb2-g" x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A8A3FF"/><stop offset="100%" stop-color="#4338CA"/></linearGradient>
+                <radialGradient id="nb2-t" cx="38%" cy="34%" r="66%"><stop offset="0%" stop-color="#4EECD4"/><stop offset="100%" stop-color="#009E80"/></radialGradient>
+              </defs>
+              <path d="M40 6C24 6 8 30 8 52 8 74 22 96 40 96 58 96 72 74 72 52 72 30 56 6 40 6Z" fill="url(#nb2-g)"/>
+              <circle cx="40" cy="58" r="7" fill="#00D4AA"/>
+              <line x1="40" y1="6" x2="40" y2="0" stroke="#8B84FF" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="40" cy="-2" r="5" fill="url(#nb2-t)"/>
+            </svg>
+            <span style="font-size:18px;font-weight:900;color:#1C1C1E;letter-spacing:-.4px">OptiTank<span style="color:#6C63FF">.</span></span>
+          </div>
+          <div style="display:flex;gap:24px">
+            <span style="font-size:13px;font-weight:500;color:#8E8E93">Radar</span>
+            <span style="font-size:13px;font-weight:500;color:#8E8E93">Carte</span>
+            <span style="font-size:13px;font-weight:500;color:#8E8E93">Stats</span>
+          </div>
+          <div style="background:#6C63FF;border-radius:999px;padding:7px 16px;font-size:13px;font-weight:700;color:#fff;box-shadow:0 3px 12px rgba(108,99,255,.35)">Télécharger</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.25);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Glassmorphism</div>
+        <div class="navbar-item" style="background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1)">
+          <div class="navbar-logo">
+            <svg width="28" height="28" viewBox="0 0 80 104" fill="none">
+              <defs>
+                <linearGradient id="nb3-g" x1="40" y1="4" x2="40" y2="96" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A8A3FF"/><stop offset="100%" stop-color="#4338CA"/></linearGradient>
+                <radialGradient id="nb3-t" cx="38%" cy="34%" r="66%"><stop offset="0%" stop-color="#4EECD4"/><stop offset="100%" stop-color="#009E80"/></radialGradient>
+              </defs>
+              <path d="M40 6C24 6 8 30 8 52 8 74 22 96 40 96 58 96 72 74 72 52 72 30 56 6 40 6Z" fill="url(#nb3-g)"/>
+              <circle cx="40" cy="58" r="7" fill="#00D4AA"/>
+              <line x1="40" y1="6" x2="40" y2="0" stroke="#8B84FF" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="40" cy="-2" r="5" fill="url(#nb3-t)"/>
+            </svg>
+            <span style="font-size:18px;font-weight:900;color:#fff;letter-spacing:-.4px">OptiTank<span style="color:#8B84FF">.</span></span>
+          </div>
+          <div style="display:flex;gap:24px">
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,.5)">Radar</span>
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,.5)">Carte</span>
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,.5)">Stats</span>
+          </div>
+          <div style="background:rgba(108,99,255,.2);border:1px solid rgba(108,99,255,.4);border-radius:999px;padding:7px 16px;font-size:13px;font-weight:700;color:#8B84FF">Télécharger</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes pFloat{
+  0%,100%{transform:translate(0,0) scale(1);opacity:.4}
+  33%{transform:translate(8px,-14px) scale(1.2);opacity:.8}
+  66%{transform:translate(-5px,-8px) scale(.8);opacity:.5}
+}
+@keyframes fuelDance{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-4px)}}
+@keyframes dotPulse{
+  0%,100%{transform:scale(1);background:rgba(255,255,255,.25)}
+  50%{transform:scale(1.6);background:#00D4AA;box-shadow:0 0 8px rgba(0,212,170,.6)}
+}
+@keyframes ringPulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:.8;transform:scale(1.05)}}
+</style>
+
+<script>
+// ── Clock ─────────────────────────────────────────────────────────────────
+function tick() {
+  const n = new Date();
+  const el = document.getElementById('sbTime');
+  if(el) el.textContent = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+tick(); setInterval(tick, 30000);
+
+// ── Scale ─────────────────────────────────────────────────────────────────
+function scale() {
+  const outer = document.getElementById('phoneOuter');
+  const maxH = window.innerHeight - 140;
+  const s = Math.min(1, maxH / 852);
+  outer.style.transform = `scale(${s})`;
+  outer.style.marginBottom = `${-(852*(1-s))}px`;
+}
+scale(); window.addEventListener('resize', scale);
+
+// ── Speed & transition state ───────────────────────────────────────────────
+let speed = 1;
+let transition = 'scale';
+
+function setSpeed(v) {
+  speed = v;
+  ['sp05','sp1','sp2'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('sp'+String(v).replace('.',''))?.classList.add('active');
+}
+function setTransition(t) {
+  transition = t;
+  ['ts-scale','ts-fade','ts-slide'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+  document.getElementById('ts-'+t)?.classList.add('active');
+}
+
+// ── Splash animation ──────────────────────────────────────────────────────
+const T = (ms) => ms / speed; // apply speed multiplier
+
+function animate(el, props, dur, delay=0, easing='ease') {
+  return new Promise(res => {
+    setTimeout(() => {
+      Object.assign(el.style, {
+        transition: Object.keys(props).map(k => {
+          const cssProp = k.replace(/([A-Z])/g, m=>'-'+m.toLowerCase());
+          return `${cssProp} ${dur}ms ${easing}`;
+        }).join(', ')
+      });
+      // Force reflow
+      el.getBoundingClientRect();
+      Object.assign(el.style, props);
+      setTimeout(res, dur);
+    }, delay);
+  });
+}
+
+function replaySplash() {
+  const splash = document.getElementById('splash');
+  const app = document.getElementById('appLayer');
+
+  // Reset
+  splash.classList.remove('exiting');
+  splash.style.animation = '';
+  splash.style.display = 'flex';
+  splash.style.opacity = '1';
+  splash.style.transform = 'scale(1)';
+  app.classList.remove('visible');
+
+  // Reset elements
+  const icon = document.getElementById('sIcon');
+  const wm = document.getElementById('sWordmark');
+  const tl = document.getElementById('sTagline');
+  const dots = document.getElementById('sDots');
+  const glow = document.getElementById('sGlow');
+  const glowTeal = document.getElementById('sGlowTeal');
+  const ring = document.getElementById('sRing');
+  const [d1, d2, d3] = ['d1','d2','d3'].map(id => document.getElementById(id));
+
+  // Reset styles instantly
+  [icon, wm, tl, dots, glow, glowTeal, ring].forEach(el => {
+    if (!el) return;
+    el.style.transition = 'none';
+    el.style.opacity = '0';
+    el.style.transform = '';
+    el.style.animation = '';
+  });
+  icon.style.transform = 'scale(.5) translateY(12px)';
+  wm.style.transform = 'translateY(18px)';
+  [d1, d2, d3].forEach(d => {
+    d.style.animation = 'none';
+    d.style.background = 'rgba(255,255,255,.25)';
+    d.style.transform = 'scale(1)';
+  });
+  glow.style.width = '480px'; glow.style.height = '480px';
+  glowTeal.style.width = '320px'; glowTeal.style.height = '320px';
+
+  setTimeout(() => runSplash(), 20);
+}
+
+async function runSplash() {
+  const icon = document.getElementById('sIcon');
+  const wm = document.getElementById('sWordmark');
+  const tl = document.getElementById('sTagline');
+  const dots = document.getElementById('sDots');
+  const glow = document.getElementById('sGlow');
+  const glowTeal = document.getElementById('sGlowTeal');
+  const ring = document.getElementById('sRing');
+  const [d1, d2, d3] = ['d1','d2','d3'].map(id => document.getElementById(id));
+  const splash = document.getElementById('splash');
+  const app = document.getElementById('appLayer');
+
+  // Phase 1 — glow expands (300ms)
+  await new Promise(r => setTimeout(r, T(300)));
+  glow.style.transition = `opacity ${T(600)}ms ease, transform ${T(800)}ms cubic-bezier(0.34,1.2,0.64,1)`;
+  glow.style.opacity = '1';
+  glowTeal.style.transition = `opacity ${T(500)}ms ease ${T(200)}ms`;
+  glowTeal.style.opacity = '1';
+  await new Promise(r => setTimeout(r, T(500)));
+
+  // Phase 2 — logo spring in (500ms)
+  icon.style.transition = `opacity ${T(300)}ms ease, transform ${T(600)}ms cubic-bezier(0.34,1.56,0.64,1)`;
+  icon.style.opacity = '1';
+  icon.style.transform = 'scale(1) translateY(0)';
+  ring.style.transition = `opacity ${T(400)}ms ease ${T(200)}ms`;
+  ring.style.opacity = '1';
+  ring.style.animation = `ringPulse 2.5s ease-in-out ${T(600)}ms infinite`;
+  await new Promise(r => setTimeout(r, T(700)));
+
+  // Phase 3 — wordmark slides up
+  wm.style.transition = `opacity ${T(400)}ms ease, transform ${T(500)}ms cubic-bezier(0.34,1.2,0.64,1)`;
+  wm.style.opacity = '1';
+  wm.style.transform = 'translateY(0)';
+  await new Promise(r => setTimeout(r, T(400)));
+
+  // Phase 4 — tagline fades
+  tl.style.transition = `opacity ${T(350)}ms ease`;
+  tl.style.opacity = '1';
+  await new Promise(r => setTimeout(r, T(500)));
+
+  // Phase 5 — loading dots
+  dots.style.transition = `opacity ${T(250)}ms ease`;
+  dots.style.opacity = '1';
+  [d1, d2, d3].forEach((d, i) => {
+    d.style.animation = `dotPulse 0.75s ease-in-out ${i * 150}ms infinite`;
+  });
+  await new Promise(r => setTimeout(r, T(950)));
+
+  // Phase 6 — exit
+  const exitDur = T(500);
+  if (transition === 'scale') {
+    splash.style.transition = `opacity ${exitDur}ms cubic-bezier(0.4,0,0.6,1), transform ${exitDur}ms cubic-bezier(0.4,0,0.6,1)`;
+    splash.style.opacity = '0';
+    splash.style.transform = 'scale(1.09)';
+  } else if (transition === 'fade') {
+    splash.style.transition = `opacity ${exitDur}ms ease`;
+    splash.style.opacity = '0';
+  } else if (transition === 'slide') {
+    splash.style.transition = `transform ${exitDur}ms cubic-bezier(0.4,0,0.6,1), opacity ${exitDur*0.4}ms ease ${exitDur*0.6}ms`;
+    splash.style.transform = 'translateY(-100%)';
+    setTimeout(() => { splash.style.opacity = '0'; }, exitDur * 0.6);
+  }
+
+  // Phase 7 — reveal app
+  setTimeout(() => {
+    splash.style.display = 'none';
+    app.classList.add('visible');
+  }, exitDur - 50);
+}
+
+// Auto-start
+setTimeout(runSplash, 300);
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    
+    <clipPath id="ios-clip">
+      <rect width="512" height="512" rx="115" ry="115"></rect>
+    </clipPath>
+    
+    <linearGradient id="drop-grad" x1="0%" y1="0%" x2="20%" y2="100%">
+      <stop offset="0%" stop-color="#A8A3FF"></stop>
+      <stop offset="45%" stop-color="#6C63FF"></stop>
+      <stop offset="100%" stop-color="#3A31C4"></stop>
+    </linearGradient>
+    
+    <radialGradient id="bg-grad" cx="50%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#16122E"></stop>
+      <stop offset="100%" stop-color="#07070D"></stop>
+    </radialGradient>
+    
+    <radialGradient id="glow-drop" cx="50%" cy="55%" r="55%">
+      <stop offset="0%" stop-color="rgba(108,99,255,0.38)"></stop>
+      <stop offset="100%" stop-color="rgba(108,99,255,0)"></stop>
+    </radialGradient>
+    
+    <radialGradient id="teal-sphere" cx="38%" cy="34%" r="66%">
+      <stop offset="0%" stop-color="#4EECD4"></stop>
+      <stop offset="100%" stop-color="#009E80"></stop>
+    </radialGradient>
+    
+    <radialGradient id="highlight" cx="30%" cy="28%" r="55%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"></stop>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"></stop>
+    </radialGradient>
+    
+    <filter id="drop-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="14" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.39  0 0 0 0 1  0 0 0 0.65 0" result="shadow"></feColorMatrix>
+      <feMerge><feMergeNode in="shadow"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+    </filter>
+    
+    <filter id="teal-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"></feGaussianBlur>
+      <feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+    </filter>
+  </defs>
+
+  <g clip-path="url(#ios-clip)">
+
+    
+    <rect width="512" height="512" fill="url(#bg-grad)"></rect>
+
+    
+    <ellipse cx="256" cy="290" rx="210" ry="175" fill="url(#glow-drop)"></ellipse>
+
+    
+    <line x1="0" y1="170" x2="512" y2="170" stroke="rgba(108,99,255,0.055)" stroke-width="1"></line>
+    <line x1="0" y1="256" x2="512" y2="256" stroke="rgba(108,99,255,0.055)" stroke-width="1"></line>
+    <line x1="0" y1="342" x2="512" y2="342" stroke="rgba(108,99,255,0.055)" stroke-width="1"></line>
+    <line x1="170" y1="0" x2="170" y2="512" stroke="rgba(108,99,255,0.055)" stroke-width="1"></line>
+    <line x1="256" y1="0" x2="256" y2="512" stroke="rgba(108,99,255,0.055)" stroke-width="1"></line>
+    <line x1="342" y1="0" x2="342" y2="512" stroke="rgba(108,99,255,0.055)" stroke-width="1"></line>
+
+    
+    
+    <path d="&#xA;      M 256,72&#xA;      C 228,72  144,162  144,282&#xA;      C 144,380  195,452  256,452&#xA;      C 317,452  368,380  368,282&#xA;      C 368,162  284,72   256,72 Z" fill="url(#drop-grad)" filter="url(#drop-shadow)"></path>
+
+    
+    <path d="&#xA;      M 256,72&#xA;      C 228,72  144,162  144,282&#xA;      C 144,380  195,452  256,452&#xA;      C 317,452  368,380  368,282&#xA;      C 368,162  284,72   256,72 Z" fill="url(#highlight)"></path>
+
+    
+    <g filter="url(#teal-glow)">
+      <circle cx="256" cy="308" r="88" fill="none" stroke="#00D4AA" stroke-width="1.5" opacity="0.18"></circle>
+      <circle cx="256" cy="308" r="60" fill="none" stroke="#00D4AA" stroke-width="1.8" opacity="0.30"></circle>
+      <circle cx="256" cy="308" r="34" fill="none" stroke="#00D4AA" stroke-width="2.2" opacity="0.48"></circle>
+    </g>
+
+    
+    
+    <circle cx="256" cy="308" r="22" fill="rgba(0,212,170,0.18)"></circle>
+    
+    <circle cx="256" cy="308" r="14" fill="#00D4AA"></circle>
+    
+    <circle cx="251" cy="303" r="5.5" fill="white" opacity="0.55"></circle>
+
+    
+    <line x1="256" y1="72" x2="256" y2="46" stroke="#8B84FF" stroke-width="10" stroke-linecap="round"></line>
+
+    
+    
+    <circle cx="256" cy="36" r="26" fill="rgba(0,212,170,0.22)"></circle>
+    
+    <circle cx="256" cy="36" r="19" fill="url(#teal-sphere)"></circle>
+    
+    <circle cx="249" cy="29" r="7" fill="white" opacity="0.50"></circle>
+
+  </g>
+</svg>

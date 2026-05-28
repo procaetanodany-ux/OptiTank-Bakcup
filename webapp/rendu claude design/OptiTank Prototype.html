@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>OptiTank — Design Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #060608;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Phone shell */
+    #phone-shell {
+      width: 393px;
+      height: 852px;
+      border-radius: 54px;
+      background: #0A0A0F;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.12),
+        0 0 0 10px #1A1A22,
+        0 0 0 11px rgba(255,255,255,0.07),
+        0 40px 120px rgba(0,0,0,0.8),
+        0 0 80px rgba(108,99,255,0.15);
+      flex-shrink: 0;
+    }
+
+    /* Dynamic Island */
+    #dynamic-island {
+      position: absolute;
+      top: 12px; left: 50%; transform: translateX(-50%);
+      width: 126px; height: 36px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 200;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+    }
+    #dynamic-island .di-cam {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #2A2A3A, #0A0A0F);
+      border: 1px solid rgba(255,255,255,0.06);
+      position: relative;
+    }
+    #dynamic-island .di-cam::after {
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px; height: 4px; border-radius: 50%;
+      background: #1A2040;
+    }
+
+    /* Status bar */
+    #status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 54px;
+      display: flex; align-items: flex-end; justify-content: space-between;
+      padding: 0 28px 8px;
+      z-index: 150;
+      font-family: -apple-system, 'SF Pro Display', system-ui;
+      font-weight: 600;
+      font-size: 15px;
+      color: white;
+      pointer-events: none;
+    }
+    #status-bar .time { letter-spacing: 0.01em; }
+    #status-bar .icons { display: flex; align-items: center; gap: 6px; opacity: 0.9; }
+
+    /* Home indicator */
+    #home-bar {
+      position: absolute;
+      bottom: 8px; left: 50%; transform: translateX(-50%);
+      width: 134px; height: 5px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      z-index: 200;
+    }
+
+    /* App container — sits inside phone, below status bar */
+    #app-root {
+      position: absolute;
+      top: 54px; left: 0; right: 0; bottom: 0;
+      overflow: hidden;
+    }
+
+    /* Outer centering bg */
+    #bg-canvas {
+      position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(108,99,255,0.15), transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 80% 80%, rgba(0,212,170,0.08), transparent 60%),
+                  #060608;
+    }
+
+    /* Responsive: on small screens, scale down */
+    @media (max-height: 900px) {
+      #phone-shell {
+        height: calc(100vh - 40px);
+        width: calc((100vh - 40px) * 393 / 852);
+        border-radius: calc(54px * (100vh - 40px) / 852);
+      }
+    }
+    @media (max-width: 450px) {
+      #phone-shell {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      #dynamic-island, #home-bar { display: none; }
+      #status-bar { display: none; }
+      #app-root { top: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="bg-canvas"></div>
+
+<!-- Phone bezel -->
+<div id="phone-shell">
+
+  <!-- Dynamic Island -->
+  <div id="dynamic-island">
+    <div class="di-cam"></div>
+  </div>
+
+  <!-- Status bar -->
+  <div id="status-bar">
+    <span class="time" id="status-time">22:16</span>
+    <div class="icons">
+      <!-- Signal bars -->
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="white">
+        <rect x="0" y="8" width="3" height="4" rx="0.6" opacity="0.4"/>
+        <rect x="4.5" y="5" width="3" height="7" rx="0.6" opacity="0.6"/>
+        <rect x="9" y="2" width="3" height="10" rx="0.6"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="0.6"/>
+      </svg>
+      <!-- WiFi -->
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="white">
+        <path d="M8 9.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+        <path d="M3.5 6.5A6.5 6.5 0 0 1 8 4.7a6.5 6.5 0 0 1 4.5 1.8l1.2-1.3A8.3 8.3 0 0 0 8 3a8.3 8.3 0 0 0-5.7 2.2z"/>
+        <path d="M5.3 8.3A3.8 3.8 0 0 1 8 7.2c1.06 0 2 .4 2.7 1.1l1.2-1.2A5.5 5.5 0 0 0 8 5.5a5.5 5.5 0 0 0-3.9 1.6z" opacity="0.7"/>
+      </svg>
+      <!-- Battery -->
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="white">
+        <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="white" stroke-opacity="0.35" fill="none"/>
+        <rect x="2" y="2" width="17" height="9" rx="2" fill="white"/>
+        <path d="M25 4.5v4c.8-.3 1.5-1.2 1.5-2s-.7-1.7-1.5-2z" fill="white" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- App mount point -->
+  <div id="app-root"></div>
+
+  <!-- Home indicator -->
+  <div id="home-bar"></div>
+</div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+  integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+  integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+  integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Design system + screens -->
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="app-shared.jsx"></script>
+<script type="text/babel" src="screen-radar.jsx"></script>
+<script type="text/babel" src="screen-map.jsx"></script>
+<script type="text/babel" src="screen-stats.jsx"></script>
+<script type="text/babel" src="screen-profile.jsx"></script>
+<script type="text/babel" src="screen-trajet.jsx"></script>
+<script type="text/babel" src="app-root.jsx"></script>
+
+<!-- Bootstrap -->
+<script type="text/babel">
+  // Live clock
+  function updateClock() {
+    const el = document.getElementById('status-time');
+    if (el) {
+      const now = new Date();
+      el.textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    }
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // Mount app
+  const root = ReactDOM.createRoot(document.getElementById('app-root'));
+  root.render(<App/>);
+</script>
+</body>
+</html>
