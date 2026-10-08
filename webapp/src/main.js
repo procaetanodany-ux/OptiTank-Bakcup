@@ -6,7 +6,7 @@ import 'leaflet.markercluster';
 import { fetchAllStations, fetchStationHistory, cacheGet, cacheSet, clearStationCache } from './api.js';
 import { FUEL_CONSUMPTION } from './vehicles.js';
 import { auth, db, storage } from './firebase.js';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, deleteUser, sendPasswordResetEmail, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, OAuthProvider, GoogleAuthProvider, signInWithCredential, reauthenticateWithCredential, reauthenticateWithPopup, signInWithPopup, signInWithRedirect, getRedirectResult, deleteUser, sendPasswordResetEmail, updateProfile } from "firebase/auth";
 import { doc, getDoc, setDoc, addDoc, collection, getDocs, deleteDoc, onSnapshot } from "firebase/firestore";
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import Chart from 'chart.js/auto';
@@ -465,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="ob-social-divider"><span>ou continuer avec</span></div>
         <div class="ob-social-row">
           <button class="ob-social-btn" id="login-apple-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg> Apple</button>
+          <button class="ob-social-btn" id="login-google-btn"><svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Google</button>
         </div>
         <div class="ob-link-row" style="margin-top:14px">Pas de compte ? <span class="ob-link" id="login-go-register">Créer un compte</span></div>
       </div>
@@ -516,6 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="ob-social-divider"><span>ou continuer avec</span></div>
         <div class="ob-social-row">
           <button class="ob-social-btn" id="ob-apple-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg> Apple</button>
+          <button class="ob-social-btn" id="ob-google-btn"><svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Google</button>
         </div>
         <div id="reg-error" class="ob-error" style="display:none"></div>
         <div style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;">
@@ -1367,40 +1369,95 @@ document.addEventListener('DOMContentLoaded', () => {
     goToStep('ob-step-login', 'backward');
   });
 
-  async function handleSocialAuth(provider, errorElId) {
+  // Suite commune après une connexion sociale réussie (popup, redirect ou native)
+  async function finishSocialLogin(user) {
+    currentUser = user;
+    const exists = await loadFromFirestore(user);
+    if (exists && userProfile?.vehicleBrand) {
+      const obContainer = document.getElementById('onboarding');
+      if (obContainer) {
+        obContainer.style.opacity = '0';
+        setTimeout(() => { obContainer.style.display = 'none'; isFirstVisit = false; refreshProfile(); switchView('map'); initMap(); initWidgetRefresh(); }, 400);
+      } else {
+        switchView('map'); initMap(); initWidgetRefresh();
+      }
+    } else {
+      if (user.displayName) tempProfile.name = user.displayName.split(' ')[0];
+      goToStep('ob-step-2', 'forward');
+    }
+  }
+
+  function buildSocialProvider(providerId) {
+    if (providerId === 'google') {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      return provider;
+    }
+    const provider = new OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
+    provider.setCustomParameters({ locale: 'fr' });
+    return provider;
+  }
+
+  // L'app iOS récente obtient le jeton Apple/Google nativement (les popups OAuth ne
+  // fonctionnent pas dans la WKWebView et Google y refuse toute connexion).
+  const hasNativeAuth = providerId => !!(window.OptiTankBridge && window.OptiTankNativeAuth?.includes(providerId));
+
+  // Résout avec un AuthCredential Firebase, ou null si l'utilisateur annule.
+  function nativeSocialCredential(providerId) {
+    return new Promise((resolve, reject) => {
+      const callbackId = 'auth_' + Date.now();
+      window[callbackId] = res => {
+        delete window[callbackId];
+        if (!res?.ok) return res?.cancelled ? resolve(null) : reject(new Error(res?.error || 'native-auth-failed'));
+        const credential = providerId === 'google'
+          ? GoogleAuthProvider.credential(res.idToken)
+          : new OAuthProvider('apple.com').credential({ idToken: res.idToken, rawNonce: res.rawNonce });
+        resolve({ credential, displayName: res.displayName || '' });
+      };
+      window.OptiTankBridge.post({ type: 'nativeSignIn', provider: providerId, callbackId });
+    });
+  }
+
+  async function handleSocialAuth(providerId, errorElId) {
     const errEl = document.getElementById(errorElId);
     if (errEl) errEl.style.display = 'none';
-    try {
-      // iOS WKWebView app native : popup ouvre Safari externe → on ne peut QUE faire redirect.
-      // Pour tout le reste (desktop, Safari iOS, Chrome Android, PWA standalone), popup est plus
-      // fiable que redirect — redirect casse en PWA iOS à cause du storage-partitioning Safari.
-      if (window.isOptiTankApp) {
-        sessionStorage.setItem('_pendingSocialAuth', '1');
-        sessionStorage.setItem('_pendingSocialAuthErr', errorElId || '');
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-      const cred = await signInWithPopup(auth, provider);
-      currentUser = cred.user;
-      const exists = await loadFromFirestore(cred.user);
-      if (exists && userProfile?.vehicleBrand) {
-        const obContainer = document.getElementById('onboarding');
-        if (obContainer) {
-          obContainer.style.opacity = '0';
-          setTimeout(() => { obContainer.style.display = 'none'; isFirstVisit = false; refreshProfile(); switchView('map'); initMap(); initWidgetRefresh(); }, 400);
-        } else {
-          switchView('map'); initMap(); initWidgetRefresh();
-        }
-      } else {
-        if (cred.user.displayName) tempProfile.name = cred.user.displayName.split(' ')[0];
-        goToStep('ob-step-2', 'forward');
-      }
-    } catch(err) {
-      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
-      const msg = err.code === 'auth/account-exists-with-different-credential'
-        ? 'Un compte existe déjà avec cet email.' : 'Connexion échouée. Réessaie.';
+    const showError = msg => {
       if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
       else showToast(msg, 'error');
+    };
+    try {
+      let cred;
+      if (hasNativeAuth(providerId)) {
+        const native = await nativeSocialCredential(providerId);
+        if (!native) return;
+        cred = await signInWithCredential(auth, native.credential);
+        // Apple ne transmet le nom qu'à la toute première connexion
+        if (native.displayName && !cred.user.displayName) {
+          try { await updateProfile(cred.user, { displayName: native.displayName }); } catch(_) {}
+        }
+      } else if (window.isOptiTankApp) {
+        // Anciennes versions de l'app iOS : pas de pont natif, seul le redirect Apple est possible.
+        if (providerId === 'google') {
+          showError("Mets à jour OptiTank depuis l'App Store pour te connecter avec Google.");
+          return;
+        }
+        sessionStorage.setItem('_pendingSocialAuth', '1');
+        sessionStorage.setItem('_pendingSocialAuthErr', errorElId || '');
+        await signInWithRedirect(auth, buildSocialProvider(providerId));
+        return;
+      } else {
+        // Navigateurs (desktop, Safari iOS, Chrome Android, PWA) : popup est plus fiable que
+        // redirect — redirect casse en PWA iOS à cause du storage-partitioning Safari.
+        cred = await signInWithPopup(auth, buildSocialProvider(providerId));
+      }
+      await finishSocialLogin(cred.user);
+    } catch(err) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+      console.error('Social auth error:', err);
+      showError(err.code === 'auth/account-exists-with-different-credential'
+        ? 'Un compte existe déjà avec cet email.' : 'Connexion échouée. Réessaie.');
     }
   }
 
@@ -1430,20 +1487,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      currentUser = cred.user;
-      const exists = await loadFromFirestore(cred.user);
-      if (exists && userProfile?.vehicleBrand) {
-        const obContainer = document.getElementById('onboarding');
-        if (obContainer) {
-          obContainer.style.opacity = '0';
-          setTimeout(() => { obContainer.style.display = 'none'; isFirstVisit = false; refreshProfile(); switchView('map'); initMap(); initWidgetRefresh(); }, 400);
-        } else {
-          switchView('map'); initMap(); initWidgetRefresh();
-        }
-      } else {
-        if (cred.user.displayName) tempProfile.name = cred.user.displayName.split(' ')[0];
-        goToStep('ob-step-2', 'forward');
-      }
+      await finishSocialLogin(cred.user);
     }).catch((err) => {
       console.error('Redirect auth error:', err);
       const msg = err.code === 'auth/account-exists-with-different-credential'
@@ -1455,27 +1499,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  document.getElementById('ob-apple-btn')?.addEventListener('click',  () => {
+  const cguAccepted = () => {
     const cguCheck = document.getElementById('ob-cgu-check');
-    if (cguCheck && !cguCheck.checked) {
-      const errEl = document.getElementById('reg-error');
-      if (errEl) { errEl.textContent = "Tu dois accepter les conditions d'utilisation pour continuer."; errEl.style.display = 'block'; }
-      return;
-    }
-    const appleProvider = new OAuthProvider('apple.com');
-    appleProvider.addScope('email');
-    appleProvider.addScope('name');
-    appleProvider.setCustomParameters({ locale: 'fr' });
-    handleSocialAuth(appleProvider, 'reg-error');
-  });
-
-  document.getElementById('login-apple-btn')?.addEventListener('click',  () => {
-    const appleProvider = new OAuthProvider('apple.com');
-    appleProvider.addScope('email');
-    appleProvider.addScope('name');
-    appleProvider.setCustomParameters({ locale: 'fr' });
-    handleSocialAuth(appleProvider, 'login-error');
-  });
+    if (!cguCheck || cguCheck.checked) return true;
+    const errEl = document.getElementById('reg-error');
+    if (errEl) { errEl.textContent = "Tu dois accepter les conditions d'utilisation pour continuer."; errEl.style.display = 'block'; }
+    return false;
+  };
+  document.getElementById('ob-apple-btn')?.addEventListener('click', () => { if (cguAccepted()) handleSocialAuth('apple', 'reg-error'); });
+  document.getElementById('ob-google-btn')?.addEventListener('click', () => { if (cguAccepted()) handleSocialAuth('google', 'reg-error'); });
+  document.getElementById('login-apple-btn')?.addEventListener('click', () => handleSocialAuth('apple', 'login-error'));
+  document.getElementById('login-google-btn')?.addEventListener('click', () => handleSocialAuth('google', 'login-error'));
 
   // Register
   async function handleRegister() {
@@ -4548,17 +4582,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Re-authenticate then retry
         showToast('Reconnexion requise pour confirmer la suppression…', 'info');
         try {
-          const provider = new OAuthProvider('apple.com');
-          provider.addScope('email');
-          provider.setCustomParameters({ locale: 'fr' });
-          if (window.isOptiTankApp) {
-            sessionStorage.setItem('_pendingDeleteAccount', '1');
-            await signInWithPopup(auth, provider);
-            await doDelete();
+          // Ré-authentification avec le fournisseur réellement utilisé par ce compte
+          const providerId = currentUser.providerData.some(p => p.providerId === 'google.com') ? 'google' : 'apple';
+          if (hasNativeAuth(providerId)) {
+            const native = await nativeSocialCredential(providerId);
+            if (!native) throw new Error('cancelled');
+            await reauthenticateWithCredential(currentUser, native.credential);
           } else {
-            await signInWithPopup(auth, provider);
-            await doDelete();
+            await reauthenticateWithPopup(currentUser, buildSocialProvider(providerId));
           }
+          await doDelete();
         } catch(reAuthErr) {
           showToast('Reconnexion échouée. Déconnecte-toi puis reconnecte-toi avant de supprimer.', 'error');
           if (btn) { btn.disabled = false; btn.textContent = 'Supprimer définitivement mon compte'; }

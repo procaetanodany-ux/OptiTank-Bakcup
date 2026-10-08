@@ -124,6 +124,31 @@ struct WebView: UIViewRepresentable {
                 }
             case "saveApnsToken":
                 break
+            case "nativeSignIn":
+                guard let callbackId = body["callbackId"] as? String,
+                      callbackId.range(of: "^[A-Za-z0-9_]+$", options: .regularExpression) != nil else { return }
+                let finish: NativeAuth.Completion = { [weak self] result in
+                    var payload: [String: Any]
+                    switch result {
+                    case .success(let values):
+                        payload = values
+                        payload["ok"] = true
+                    case .failure(let error):
+                        var cancelled = false
+                        if case .cancelled = error { cancelled = true }
+                        payload = ["ok": false, "cancelled": cancelled, "error": error.localizedDescription]
+                    }
+                    guard let data = try? JSONSerialization.data(withJSONObject: payload),
+                          let json = String(data: data, encoding: .utf8) else { return }
+                    DispatchQueue.main.async {
+                        self?.model.webView?.evaluateJavaScript("if(window['\(callbackId)']) window['\(callbackId)'](\(json));", completionHandler: nil)
+                    }
+                }
+                switch body["provider"] as? String {
+                case "apple":  NativeAuth.shared.signInWithApple(completion: finish)
+                case "google": NativeAuth.shared.signInWithGoogle(completion: finish)
+                default:       finish(.failure(.failed("Fournisseur inconnu")))
+                }
             default:
                 break
             }
@@ -148,6 +173,7 @@ struct WebView: UIViewRepresentable {
             source: """
                 Object.defineProperty(navigator, 'standalone', { get: () => true, configurable: true });
                 window.isOptiTankApp = true;
+                window.OptiTankNativeAuth = ['apple', 'google'];
                 window.OptiTankBridge = { post: (m) => window.webkit.messageHandlers.optitank.postMessage(m) };
             """,
             injectionTime: .atDocumentStart,
