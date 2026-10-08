@@ -9,7 +9,6 @@ import { auth, db, storage } from './firebase.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, OAuthProvider, GoogleAuthProvider, signInWithCredential, reauthenticateWithCredential, reauthenticateWithPopup, signInWithPopup, signInWithRedirect, getRedirectResult, deleteUser, sendPasswordResetEmail, updateProfile } from "firebase/auth";
 import { doc, getDoc, setDoc, addDoc, collection, getDocs, deleteDoc, onSnapshot } from "firebase/firestore";
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
-import Chart from 'chart.js/auto';
 import { getBrands, getModels, getYearRange } from './vehicleAPI.js';
 import '@phosphor-icons/web/regular';
 import '@phosphor-icons/web/bold';
@@ -25,6 +24,11 @@ const COUNTRIES = [
   { code: 'DE', label: 'Allemagne', flag: '🇩🇪', currency: '€',   enableKey: 'fillz_enable_germany',  cfg: 'enableGermany', disabled: true },
 ];
 const currencyFor = code => (COUNTRIES.find(c => c.code === code)?.currency) || 'CHF';
+
+// chart.js n'est utilisé que sur des vues secondaires : chargé à la demande.
+let Chart = null;
+let chartPromise = null;
+const loadChart = () => (chartPromise ||= import('chart.js/auto').then(m => (Chart = m.default)));
 
 // ── Admin access ──
 const ADMIN_EMAIL = 'pro.caetanodany@gmail.com';
@@ -2351,6 +2355,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let savingsChartInstance = null;
   function renderSavingsChart() {
+    if (!Chart) { loadChart().then(renderSavingsChart); return; }
     const canvas = document.getElementById('savings-chart');
     if (!canvas || typeof Chart === 'undefined') return;
     if (savingsChartInstance) { savingsChartInstance.destroy(); savingsChartInstance = null; }
@@ -3073,6 +3078,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Chart: évolution des prix (7 jours) ────────────────
     let admChartInited = false;
     function initAdmChart() {
+      if (!Chart) { loadChart().then(initAdmChart); return; }
       if (admChartInited) return;
       const chartCanvas = document.getElementById('adm-price-chart');
       if (!chartCanvas) return;
@@ -4029,6 +4035,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let detHistoryChart = null;
 
   async function renderStationHistoryChart(st) {
+    if (!Chart) await loadChart();
     const section = document.getElementById('det-history-section');
     const emptyEl = document.getElementById('det-history-empty');
     const fuelLabel = document.getElementById('det-history-fuel');
@@ -4928,6 +4935,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderStatsChart(history, days, stationEntries) {
+    if (!Chart) { loadChart().then(() => renderStatsChart(history, days, stationEntries)); return; }
     const emptyEl = document.getElementById('stats-empty');
     if (days.length < 2) {
       if (emptyEl) {

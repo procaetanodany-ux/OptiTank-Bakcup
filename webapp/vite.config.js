@@ -51,6 +51,14 @@ export default defineConfig({
       external: [
         'fsevents'
       ],
+      output: {
+        // Bibliothèques stables dans des fichiers séparés : elles restent en cache
+        // quand seul le code de l'app change.
+        manualChunks: {
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage', 'firebase/analytics'],
+          leaflet: ['leaflet', 'leaflet.markercluster'],
+        },
+      },
     },
   }
 });
