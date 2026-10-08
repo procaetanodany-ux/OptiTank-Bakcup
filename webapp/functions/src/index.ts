@@ -25,20 +25,34 @@ async function sendAPNS(
   payload?: Record<string, string>
 ): Promise<void> {
   const keyValue = apnsKey.value().replace(/\\n/g, "\n");
-  const provider = new apn.Provider({
-    token: { key: keyValue, keyId: APNS_KEY_ID, teamId: APNS_TEAM_ID },
-    production: false,
-  });
   const notif = new apn.Notification();
   notif.alert = { title, body };
   notif.topic = APNS_BUNDLE;
   notif.sound = "default";
   if (payload) notif.payload = payload;
 
-  const result = await provider.send(notif, deviceToken);
-  provider.shutdown();
+  // Les apps App Store / TestFlight ont des jetons de production, les builds Xcode des
+  // jetons sandbox : on essaie la production, puis le sandbox pour les jetons refusés.
+  const send = async (production: boolean, tokens: string | string[]) => {
+    const provider = new apn.Provider({
+      token: { key: keyValue, keyId: APNS_KEY_ID, teamId: APNS_TEAM_ID },
+      production,
+    });
+    try {
+      return await provider.send(notif, tokens);
+    } finally {
+      provider.shutdown();
+    }
+  };
 
-  if (result.failed.length > 0) {
+  let result = await send(true, deviceToken);
+  const retry = result.failed
+    .filter((f) => f.response?.reason === "BadDeviceToken")
+    .map((f) => f.device);
+  const sent = result.sent.length;
+  if (retry.length > 0) result = await send(false, retry);
+
+  if (sent === 0 && result.sent.length === 0 && result.failed.length > 0) {
     throw new Error(result.failed[0].response?.reason ?? "APNs send failed");
   }
 }
