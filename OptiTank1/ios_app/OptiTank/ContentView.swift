@@ -1,5 +1,4 @@
 import SwiftUI
-import AppTrackingTransparency
 
 struct ContentView: View {
     @StateObject private var model = WebViewModel()

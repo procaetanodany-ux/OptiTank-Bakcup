@@ -53,9 +53,7 @@
 	<string>OptiTank nécessite l'accès à l'appareil photo afin de vous permettre de scanner des tickets de caisse ou des QR codes en station-service.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>OptiTank utilise votre position géographique pour afficher sur la carte les stations-service les plus proches de vous et calculer les itinéraires.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>OptiTank utilise ces données pour vous proposer des offres pertinentes et améliorer l'expérience utilisateur.</string>
-	<key>UIApplicationSceneManifest</key>
+<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
@@ -63,7 +61,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
-		<string>fetch</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>

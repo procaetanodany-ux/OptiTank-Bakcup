@@ -65,6 +65,14 @@
         "function": "tcsProxy"
       },
       {
+        "source": "/api/es",
+        "function": "tcsProxy"
+      },
+      {
+        "source": "/api/es/**",
+        "function": "tcsProxy"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

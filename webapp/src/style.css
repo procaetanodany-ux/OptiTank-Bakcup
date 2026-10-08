@@ -1050,3 +1050,49 @@ body {
 .stats-chip:active {
   transform: scale(0.95);
 }@keyframes scaleUpBounce { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } } @keyframes dash { to { stroke-dashoffset: 0; } }
+
+/* City Labels and Overlays */
+.city-label {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.5);
+  pointer-events: none !important;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  width: auto !important;
+  height: auto !important;
+}
+
+#btn-map-layers {
+  position: absolute;
+  top: 140px; /* Below GPS button */
+  right: 16px;
+  z-index: 1000;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(20, 20, 30, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+#btn-map-layers:active {
+  transform: scale(0.92);
+}
+#btn-map-layers.active {
+  background: rgba(139, 92, 246, 0.85);
+  border-color: rgba(139, 92, 246, 1);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}

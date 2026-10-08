@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>À propos & Support — OptiTank</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+      background: #07070D;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.7;
+      padding: 0 0 60px;
+    }
+    header {
+      background: rgba(12,11,30,0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    header a {
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    header a:hover { color: white; }
+    .sep { color: rgba(255,255,255,0.2); font-size: 13px; }
+    .title-page { font-size: 13px; color: rgba(255,255,255,0.7); }
+    .container { max-width: 680px; margin: 0 auto; padding: 40px 24px; }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .subtitle { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 36px; }
+    h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      margin: 28px 0 8px;
+    }
+    p { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 12px; }
+    a { color: #8B84FF; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .action-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      margin-bottom: 12px;
+      transition: background 0.2s;
+    }
+    .action-btn:hover { background: rgba(255, 255, 255, 0.08); text-decoration: none; }
+    .action-btn.primary {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+      border-color: rgba(139, 92, 246, 0.4);
+      color: #bbaaff;
+    }
+    .action-btn.primary:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(99, 102, 241, 0.3) 100%);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button onclick="history.back()" style="background:none;border:none;cursor:pointer;padding:4px 8px 4px 0;color:rgba(255,255,255,0.4);font-size:13px;display:flex;align-items:center;gap:4px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Retour
+    </button>
+    <span class="sep">/</span>
+    <span class="title-page">Support</span>
+  </header>
+  <div class="container">
+    <h1>À propos & Support</h1>
+    <div class="subtitle">Besoin d'aide ? Nous sommes là.</div>
+    
+    <h2>Version de l'application</h2>
+    <p>Vous utilisez actuellement OptiTank. En cas de problème, assurez-vous d'avoir mis à jour l'application à la dernière version disponible.</p>
+
+    <h2>Nous contacter</h2>
+    <p>Que ce soit pour un bug, une question, ou une suggestion d'amélioration, vous pouvez nous écrire directement.</p>
+    
+    <a href="mailto:contact@optitank.online?subject=Signaler un bug sur OptiTank" class="action-btn primary">🐞 Signaler un bug</a>
+    <a href="mailto:contact@optitank.online?subject=Contact OptiTank" class="action-btn">✉️ Contacter le développeur</a>
+
+    <h2>Informations Légales</h2>
+    <p>Nous prenons la protection de vos données très au sérieux. Consultez nos documents légaux ci-dessous :</p>
+    <div style="margin-top: 16px;">
+      <a href="/privacy.html" class="action-btn" style="padding: 12px; font-size: 14px;">Politique de confidentialité</a>
+      <a href="/terms.html" class="action-btn" style="padding: 12px; font-size: 14px;">Conditions d'utilisation</a>
+    </div>
+  </div>
+</body>
+</html>

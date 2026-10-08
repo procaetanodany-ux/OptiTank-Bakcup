@@ -3,7 +3,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { fetchTCSStations, fetchStationHistory } from './api.js';
+import { fetchAllStations, fetchStationHistory, cacheGet, cacheSet, clearStationCache } from './api.js';
 import { FUEL_CONSUMPTION } from './vehicles.js';
 import { auth, db, storage } from './firebase.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, OAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, deleteUser, sendPasswordResetEmail, updateProfile } from "firebase/auth";
@@ -11,9 +11,20 @@ import { doc, getDoc, setDoc, addDoc, collection, getDocs, deleteDoc, onSnapshot
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import Chart from 'chart.js/auto';
 import { getBrands, getModels, getYearRange } from './vehicleAPI.js';
-import Tesseract from 'tesseract.js';
-window.Tesseract = Tesseract; // Expose for backward-compat with existing window.Tesseract usage
+import '@phosphor-icons/web/regular';
+import '@phosphor-icons/web/bold';
+import '@phosphor-icons/web/fill';
 
+// ── Pays supportés (pilote l'admin, les devises et les toggles) ──
+// CH toujours actif. enabled:false = visible mais pas encore branché (Allemagne).
+const COUNTRIES = [
+  { code: 'CH', label: 'Suisse',    flag: '🇨🇭', currency: 'CHF', enableKey: null,                  cfg: null,             always: true },
+  { code: 'FR', label: 'France',    flag: '🇫🇷', currency: '€',   enableKey: 'fillz_enable_france',   cfg: 'enableFrance' },
+  { code: 'ES', label: 'Espagne',   flag: '🇪🇸', currency: '€',   enableKey: 'fillz_enable_spain',    cfg: 'enableSpain' },
+  { code: 'PT', label: 'Portugal',  flag: '🇵🇹', currency: '€',   enableKey: 'fillz_enable_portugal', cfg: 'enablePortugal' },
+  { code: 'DE', label: 'Allemagne', flag: '🇩🇪', currency: '€',   enableKey: 'fillz_enable_germany',  cfg: 'enableGermany', disabled: true },
+];
+const currencyFor = code => (COUNTRIES.find(c => c.code === code)?.currency) || 'CHF';
 
 // ── Admin access ──
 const ADMIN_EMAIL = 'pro.caetanodany@gmail.com';
@@ -48,7 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Splash screen handled natively by the iOS app launch screen — JS version removed.
 
   // ── PWA Gateway Logic ────────────────────────────────────
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://') || new URLSearchParams(location.search).has('app');
+  let isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://') || new URLSearchParams(location.search).has('app');
+  if (isStandalone) localStorage.setItem('optitank_is_app', '1');
+  else if (localStorage.getItem('optitank_is_app') === '1') isStandalone = true;
   
   if (!isStandalone && !_ADMIN_ROUTE) {
     document.getElementById('landing-showcase').style.display = 'block';
@@ -159,15 +172,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Background preload: fire the station fetch ASAP so it's ready when the user opens the map/radar ──
   // We kick it before any heavy DOM work; result is cached in `allStations` via the dataLoaded flag in loadMapData().
-  const _stationPreload = fetchTCSStations().catch(() => []);
+  window.enableFranceConfig = localStorage.getItem('fillz_enable_france') === 'true';
+  let _stationPreload = fetchAllStations().catch(() => []);
+
+  // Early geolocation preload (only if already granted)
+  window.userPreloadLat = null;
+  window.userPreloadLng = null;
+  if (localStorage.getItem('fillz_location_granted') === '1' && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => { window.userPreloadLat = pos.coords.latitude; window.userPreloadLng = pos.coords.longitude; },
+      () => {}, { enableHighAccuracy: true }
+    );
+  }
 
   // ── State ──────────────────────────────────────────────
   let allStations = [];
   let userProfile = JSON.parse(localStorage.getItem('fillz_profile') || 'null');
   let selectedFuel = userProfile?.fuelType || 'SP95';
   let selectedBrandFilter = 'Toutes';
-  let favorites = JSON.parse(localStorage.getItem('fillz_favs') || '[]');
+  function normalizeFavorites(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr.map(f => {
+      let val = typeof f === 'object' && f !== null ? (f.id || f.stationId) : f;
+      if (typeof val === 'string' && val.startsWith('tcs-')) return val.replace('tcs-', '');
+      return val ? String(val) : null;
+    }).filter(Boolean);
+  }
+
+  let favorites = normalizeFavorites(JSON.parse(localStorage.getItem('fillz_favs') || '[]'));
   let widgetStationId = localStorage.getItem('fillz_widget_station') || null;
+  if (widgetStationId && widgetStationId.startsWith('tcs-')) {
+    widgetStationId = widgetStationId.replace('tcs-', '');
+    localStorage.setItem('fillz_widget_station', widgetStationId);
+  }
   let priceHistory = null;
   let dataLoaded = false;
   let isFirstVisit = !userProfile;
@@ -217,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         refuels: refuels,
         alerts: alerts,
         commute: comm,
+        location: (typeof userLat !== 'undefined' && typeof userLng !== 'undefined') ? { lat: userLat, lng: userLng } : null,
       }, { merge: true });
     } catch(err) {
       console.error('Erreur Sync Firestore', err);
@@ -240,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
           localStorage.setItem('fillz_profile', JSON.stringify(userProfile));
         }
         if (data.favorites) {
-          favorites = data.favorites;
+          favorites = normalizeFavorites(data.favorites);
           localStorage.setItem('fillz_favs', JSON.stringify(favorites));
         }
         if (data.refuels) {
@@ -277,8 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       // Push notifications iOS — demande permission + sauvegarde token APNS
       if (window.isOptiTankApp && window.OptiTankBridge) {
-        // Demande la permission push si pas encore accordée
-        window.OptiTankBridge.post({ type: 'requestNotifications' });
+        // Demande la permission push si déjà accordée (ou si on le fait manuellement plus tard)
+        if (localStorage.getItem('fillz_push_granted') === '1') {
+          window.OptiTankBridge.post({ type: 'requestNotifications' });
+        }
 
         const saveToken = async (token) => {
           if (!token || token.trim() === '') return;
@@ -347,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Geolocation ────────────────────────────────────────
   let hasGeoloc = false;
-  if (!isFirstVisit) {
+  if (localStorage.getItem('fillz_location_granted') === '1') {
     window.getAppLocation(
       p => { 
         userLat = p.coords.latitude; 
@@ -634,8 +674,27 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="ob-loc-info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00D4AA" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/></svg><div><strong style="color:white">3 000+ stations</strong> en Suisse analysées via l'API TCS.</div></div>
         </div>
         <div style="width:100%;display:flex;flex-direction:column;gap:10px">
-          <button class="ob-btn-accent" id="ob-loc-allow">📍 Autoriser la localisation</button>
-          <button class="ob-btn-ghost" id="ob-loc-skip">Plus tard</button>
+          <button class="ob-btn-accent" id="ob-loc-allow">📍 Continuer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ob-step" id="ob-step-4b">
+      <div class="ob-step-inner" style="padding:28px 28px 40px;justify-content:space-between;align-items:center;background:radial-gradient(ellipse 70% 50% at 50% 40%,rgba(139,92,246,.12),transparent 65%)">
+        <div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center">
+          <div class="ob-loc-radar" style="border-color: rgba(139,92,246, 0.4)">
+            <i class="ph-fill ph-bell-ringing" style="font-size:36px;color:#8B5CF6"></i>
+          </div>
+          <div>
+            <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.5px;line-height:1.1;margin-bottom:12px;color:white">Alertes de Prix</h2>
+            <p style="font-size:15px;color:rgba(255,255,255,.5);line-height:1.45;margin-bottom:16px">Recevez une notification push dès que le prix du carburant baisse fortement près de vous.</p>
+          </div>
+          <div class="ob-loc-info" style="border:1px solid rgba(139,92,246,0.2); background:rgba(139,92,246,0.05)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><div><strong style="color:white">Pas de spam.</strong> Uniquement de vraies alertes pour faire des économies.</div></div>
+        </div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+          <button class="ob-btn-accent" id="ob-push-allow" style="background:linear-gradient(135deg,#8B5CF6,#6366f1);border-bottom-color:#4f46e5;color:white">🔔 Activer les alertes</button>
+          <button class="ob-btn-ghost" id="ob-push-skip">Plus tard</button>
         </div>
       </div>
     </div>
@@ -780,6 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <p id="bs-address">Adresse complète</p>
               <p id="bs-distance" style="color:var(--accent-purple); font-weight:600; margin-top:2px;">0.0 km</p>
             </div>
+            <button class="btn-icon circle" id="bs-share" style="margin-right:8px;"><i class="ph ph-share-network"></i></button>
             <button class="btn-icon circle" id="bs-fav"><i class="ph ph-heart"></i></button>
           </div>
           <div id="bs-prices" style="margin-bottom: 20px;"></div>
@@ -965,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="radar-header" style="text-align:left; padding: 0 16px 10px;">
         <h1><i class="ph-fill ph-map-trifold" style="color:var(--accent-purple)"></i> Trajets Intelligents</h1>
-        <p>Entrez votre destination pour trouver les meilleures stations <strong>sur votre route</strong>, sans détour.</p>
+        <p>Indiquez votre trajet et votre autonomie : l'IA planifie <strong>où vous arrêter faire le plein</strong>, au moins cher, sans tomber en panne.</p>
       </div>
       <div style="padding: 0 16px;">
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 14px; display:flex; flex-direction:column; gap:10px;">
@@ -978,7 +1038,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <i class="ph-fill ph-map-pin" style="color:#ef4444"></i>
             <input type="text" id="route-end" class="ob-input" style="flex:1; margin:0; padding:10px;" placeholder="Arrivée (ex: Lausanne)"/>
           </div>
-          <button class="btn-primary" id="btn-calc-route" style="margin-top:4px;"><i class="ph-bold ph-route"></i> Calculer l'itinéraire IA</button>
+          <div style="width:2px; height:8px; background:rgba(255,255,255,0.1); margin-left:6px;"></div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <i class="ph-fill ph-gas-pump" style="color:var(--accent-green)"></i>
+            <input type="number" inputmode="numeric" min="0" id="route-autonomy" class="ob-input" style="flex:1; margin:0; padding:10px;" placeholder="Autonomie restante (km)"/>
+          </div>
+          <button class="btn-primary" id="btn-plan-route" style="margin-top:4px; background:linear-gradient(135deg,#8b5cf6,#6366f1); box-shadow:0 6px 18px rgba(139,92,246,0.35);"><i class="ph-bold ph-brain"></i> Planifier mes arrêts (IA)</button>
+          <button class="btn-secondary" id="btn-calc-route" style="margin-top:2px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.75);"><i class="ph-bold ph-list-magnifying-glass"></i> Juste les stations les moins chères</button>
         </div>
       </div>
       <div id="route-results" class="radar-results" style="padding-top:16px;">
@@ -1079,6 +1145,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="section-title">Vos Favoris</div>
         <div id="profile-favorites-list" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
 
+        <div class="section-title">Station du Widget</div>
+        <div id="widget-station-picker" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
+
+        <div class="section-title">Support & Légal</div>
+        <div class="list-item" id="btn-request-notifications" style="cursor:pointer; background:rgba(255, 255, 255, 0.05); border:1px solid rgba(255, 255, 255, 0.1); margin-bottom:8px;">
+          <div class="item-left"><i class="ph-fill ph-bell-ringing" style="color:#00D4AA"></i> <b>Activer les notifications push</b></div>
+          <i class="ph ph-caret-right" style="color:var(--text-muted)"></i>
+        </div>
+        <div class="list-item" id="btn-support" style="cursor:pointer; background:rgba(255, 255, 255, 0.05); border:1px solid rgba(255, 255, 255, 0.1);">
+          <div class="item-left"><i class="ph-fill ph-question" style="color:var(--text-light)"></i> <b>À propos & Support</b></div>
+          <i class="ph ph-caret-right" style="color:var(--text-muted)"></i>
+        </div>
+
         <div id="admin-btn-wrapper" style="display:none;margin-top:20px;padding:0 10px;">
           <button id="btn-open-admin" style="width:100%;padding:13px;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:none;border-radius:13px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.1px;">⚙️ Panneau Administration</button>
         </div>
@@ -1151,7 +1230,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tempProfile = {};
 
   function updateObProgress(stepId) {
-    const prog = {'ob-step-0':0,'ob-step-login':0,'ob-step-1':15,'ob-step-2':30,'ob-step-2b':45,'ob-step-2c':60,'ob-step-2d':60,'ob-step-3':75,'ob-step-4':88,'ob-step-5':100};
+    const prog = {'ob-step-0':0,'ob-step-login':0,'ob-step-1':15,'ob-step-2':30,'ob-step-2b':45,'ob-step-2c':60,'ob-step-2d':60,'ob-step-3':75,'ob-step-4':85,'ob-step-4b':92,'ob-step-5':100};
     const fill = document.getElementById('ob-progress-fill');
     if (fill) fill.style.width = (prog[stepId] ?? 0) + '%';
   }
@@ -1305,7 +1384,13 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUser = cred.user;
       const exists = await loadFromFirestore(cred.user);
       if (exists && userProfile?.vehicleBrand) {
-        goToStep('ob-step-4', 'forward');
+        const obContainer = document.getElementById('onboarding');
+        if (obContainer) {
+          obContainer.style.opacity = '0';
+          setTimeout(() => { obContainer.style.display = 'none'; isFirstVisit = false; refreshProfile(); switchView('map'); initMap(); initWidgetRefresh(); }, 400);
+        } else {
+          switchView('map'); initMap(); initWidgetRefresh();
+        }
       } else {
         if (cred.user.displayName) tempProfile.name = cred.user.displayName.split(' ')[0];
         goToStep('ob-step-2', 'forward');
@@ -1348,7 +1433,13 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUser = cred.user;
       const exists = await loadFromFirestore(cred.user);
       if (exists && userProfile?.vehicleBrand) {
-        goToStep('ob-step-4', 'forward');
+        const obContainer = document.getElementById('onboarding');
+        if (obContainer) {
+          obContainer.style.opacity = '0';
+          setTimeout(() => { obContainer.style.display = 'none'; isFirstVisit = false; refreshProfile(); switchView('map'); initMap(); initWidgetRefresh(); }, 400);
+        } else {
+          switchView('map'); initMap(); initWidgetRefresh();
+        }
       } else {
         if (cred.user.displayName) tempProfile.name = cred.user.displayName.split(' ')[0];
         goToStep('ob-step-2', 'forward');
@@ -1700,12 +1791,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Location permission
   document.getElementById('ob-loc-allow')?.addEventListener('click', () => {
+    localStorage.setItem('fillz_location_granted', '1');
     window.getAppLocation(
-      pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; hasGeoloc = true; goToStep('ob-step-5', 'forward'); startSuccessAnim(); },
-      () => { goToStep('ob-step-5', 'forward'); startSuccessAnim(); }
+      pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; hasGeoloc = true; goToStep('ob-step-4b', 'forward'); },
+      () => { goToStep('ob-step-4b', 'forward'); }
     );
   });
-  document.getElementById('ob-loc-skip')?.addEventListener('click', () => { goToStep('ob-step-5', 'forward'); startSuccessAnim(); });
+  // Push notification permission
+  document.getElementById('ob-push-allow')?.addEventListener('click', () => {
+    localStorage.setItem('fillz_push_granted', '1');
+    if (window.isOptiTankApp && window.OptiTankBridge) {
+      window.OptiTankBridge.post({ type: 'requestNotifications' });
+    }
+    goToStep('ob-step-5', 'forward'); startSuccessAnim();
+  });
+  document.getElementById('ob-push-skip')?.addEventListener('click', () => {
+    localStorage.setItem('fillz_push_granted', '0');
+    goToStep('ob-step-5', 'forward'); startSuccessAnim();
+  });
 
   // Success animation (confetti + counter + badge)
   function startSuccessAnim() {
@@ -2144,7 +2247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               </div>
               <div class="rrc-right">
-                <div class="rrc-price">CHF ${parseFloat(st.prices[selectedFuel] || 0).toFixed(3)}</div>
+                <div class="rrc-price">${currencyFor(st.country)} ${parseFloat(st.prices[selectedFuel] || 0).toFixed(3)}</div>
               </div>
             </div>`;
           }
@@ -2493,20 +2596,20 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingEl.innerHTML = `<div style="width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#8b5cf6;border-radius:50%;animation:adm-spin 0.7s linear infinite;"></div><div style="font-size:14px;font-weight:600;color:#64748b;">Chargement des données...</div><style>@keyframes adm-spin{to{transform:rotate(360deg)}}</style>`;
     document.body.appendChild(loadingEl);
 
-    // Stations: mémoire > localStorage cache (30 min) > API TCS
+    // Stations: mémoire > cache IndexedDB (30 min) > API TCS
     const ADM_CACHE_KEY = 'fillz_admin_stations_cache';
     const ADM_CACHE_TTL = 30 * 60 * 1000;
     let statsStations = allStations;
     let admCacheTs = null;
     if (statsStations.length === 0) {
-      const cached = JSON.parse(localStorage.getItem(ADM_CACHE_KEY) || 'null');
+      const cached = await cacheGet(ADM_CACHE_KEY);
       if (cached && Date.now() - cached.ts < ADM_CACHE_TTL) {
         statsStations = cached.data;
         admCacheTs = cached.ts;
       } else {
         try {
-          statsStations = await fetchTCSStations();
-          localStorage.setItem(ADM_CACHE_KEY, JSON.stringify({ data: statsStations, ts: Date.now() }));
+          statsStations = await fetchAllStations(true); // Admin gets all stations
+          await cacheSet(ADM_CACHE_KEY, { data: statsStations, ts: Date.now() });
           admCacheTs = Date.now();
         } catch(_) {}
       }
@@ -2562,13 +2665,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Stats
     const stationCount = statsStations.length;
+    const stationCountLabel = `${stationCount.toLocaleString('fr')}`;
     const fuelsAvail = ['SP95','SP98','Diesel','GPL'].filter(f => statsStations.some(s => s.prices[f]));
-    const avgPrices = {};
-    fuelsAvail.forEach(f => {
-      const vals = statsStations.filter(s => s.prices[f]).map(s => parseFloat(s.prices[f]));
-      avgPrices[f] = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(3) : null;
+
+    // Stats par pays — boucle sur les pays réellement présents dans les données.
+    const presentCodes = [...new Set(statsStations.map(s => s.country || 'CH'))];
+    const countryStats = COUNTRIES.filter(c => presentCodes.includes(c.code)).map(c => {
+      const list = statsStations.filter(s => (s.country || 'CH') === c.code);
+      const avg = {};
+      fuelsAvail.forEach(f => {
+        const vals = list.filter(s => s.prices[f]).map(s => parseFloat(s.prices[f]));
+        avg[f] = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(3) : null;
+      });
+      const brandMap = {};
+      list.forEach(s => { if (s.brand) brandMap[s.brand] = (brandMap[s.brand]||0)+1; });
+      const topBrands = Object.entries(brandMap).sort((a,b)=>b[1]-a[1]).slice(0, 10);
+      const cheapest = list.filter(s => s.prices[selectedFuel])
+        .sort((a,b)=>parseFloat(a.prices[selectedFuel])-parseFloat(b.prices[selectedFuel]))
+        .slice(0, 5);
+      return {
+        ...c,
+        count: list.length,
+        avg,
+        maxAvg: Math.max(...Object.values(avg).filter(Boolean).map(Number), 0) || 1,
+        topBrands,
+        maxBrand: topBrands[0]?.[1] || 1,
+        cheapest,
+      };
     });
-    const maxAvg = Math.max(...Object.values(avgPrices).filter(Boolean).map(Number));
+    const stationCountSub = countryStats.map(c => `${c.flag} ${c.count.toLocaleString('fr')}`).join(' | ');
 
     // Cache label
     const appCacheRaw = JSON.parse(localStorage.getItem('fillz_stations_cache_v2') || 'null');
@@ -2580,17 +2705,6 @@ document.addEventListener('DOMContentLoaded', () => {
       : admCacheAge !== null ? `💾 Admin cache (${admCacheAge} min)` : '—';
     const cacheKpiVal = appCacheAge !== null ? (appCacheValid ? `${appCacheAge} min` : 'Expiré') : admCacheAge !== null ? `${admCacheAge} min` : '—';
     const cacheKpiColor = appCacheValid ? '#10b981' : admCacheAge !== null ? '#6366f1' : '#64748b';
-
-    // Brand stats
-    const brandMap = {};
-    statsStations.forEach(s => { const b = s.brand; if (b) brandMap[b] = (brandMap[b]||0)+1; });
-    const topBrands = Object.entries(brandMap).sort((a,b)=>b[1]-a[1]).slice(0, 10);
-    const maxBrand = topBrands[0]?.[1] || 1;
-
-    // Cheapest stations
-    const cheapest = statsStations.filter(s => s.prices[selectedFuel])
-      .sort((a,b) => parseFloat(a.prices[selectedFuel]) - parseFloat(b.prices[selectedFuel]))
-      .slice(0, 5);
 
     const overlay = document.createElement('div');
     overlay.id = 'admin-panel-overlay';
@@ -2655,7 +2769,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <!-- 4 KPIs -->
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
               ${[
-                {label:'Stations chargées',value:stationCount.toLocaleString('fr'),icon:'📍',color:'#8b5cf6',sub:'Via API TCS'},
+                {label:'Stations chargées',value:stationCountLabel,icon:'📍',color:'#8b5cf6',sub:stationCountSub},
                 {label:'Dernière sync',value:lastSync,icon:'🔄',color:'#6366f1',sub:'syncStationPrices'},
                 {label:'Changements aujourd\'hui',value:String(changedCount),icon:'📊',color:'#f59e0b',sub:'prix modifiés'},
                 {label:'Cache',value:cacheKpiVal,icon:appCacheValid?'✅':admCacheAge!==null?'💾':'💻',color:cacheKpiColor,sub:'local'},
@@ -2669,37 +2783,36 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <!-- Prix moyens rapide -->
             <div class="adm-card">
-              <div class="adm-card-title">⛽ Prix moyens nationaux</div>
+              ${countryStats.map((c, ci) => `
+              <div class="adm-card-title"${ci > 0 ? ' style="margin-top:18px;"' : ''}>⛽ Prix moyens nationaux (${c.flag} ${c.label})</div>
               <div style="display:grid;grid-template-columns:repeat(${fuelsAvail.length},1fr);gap:12px;">
                 ${fuelsAvail.map(f => `
                   <div style="text-align:center;padding:16px;background:#faf5ff;border-radius:12px;border:1px solid #ede9fe;">
                     <div style="font-size:11px;font-weight:700;color:#7c3aed;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">${f}</div>
-                    <div style="font-size:22px;font-weight:800;color:${fuelColors[f]||'#8b5cf6'};">CHF ${avgPrices[f]||'—'}</div>
-                    <div style="font-size:11px;color:#94a3b8;margin-top:4px;">${statsStations.filter(s=>s.prices[f]).length} stations</div>
+                    <div style="font-size:22px;font-weight:800;color:${fuelColors[f]||'#8b5cf6'};">${c.currency} ${c.avg[f]||'—'}</div>
                   </div>`).join('')}
-              </div>
+              </div>`).join('')}
             </div>
           </div>
 
           <!-- Prix & Stations -->
           <div class="adm-section" id="adm-sec-prices">
             <div style="margin-bottom:24px;"><div style="font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;">Prix & Stations</div></div>
-            <div class="adm-col2">
+            
+            ${countryStats.map(c => `
+            <div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:12px;">${c.flag} ${c.label}</div>
+            <div class="adm-col2" style="margin-bottom:24px;">
               <div>
                 <div class="adm-card">
                   <div class="adm-card-title">⛽ Prix moyens par carburant</div>
                   <div style="display:flex;flex-direction:column;gap:14px;">
                     ${fuelsAvail.map(f => {
-                      const avg = avgPrices[f];
-                      const pct = avg ? Math.round((Number(avg)/maxAvg)*100) : 0;
-                      const cnt = statsStations.filter(s => s.prices[f]).length;
+                      const avg = c.avg[f];
+                      const pct = avg ? Math.round((Number(avg)/c.maxAvg)*100) : 0;
                       return `<div>
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                           <span style="font-size:13px;font-weight:700;color:#1e293b;">${f}</span>
-                          <div>
-                            <span style="font-size:16px;font-weight:800;color:${fuelColors[f]||'#8b5cf6'};">CHF ${avg}</span>
-                            <span style="font-size:11px;color:#94a3b8;margin-left:6px;">${cnt} stations</span>
-                          </div>
+                          <span style="font-size:16px;font-weight:800;color:${fuelColors[f]||'#8b5cf6'};">${c.currency} ${avg||'—'}</span>
                         </div>
                         <div style="background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;">
                           <div style="height:100%;width:${pct}%;background:${fuelColors[f]||'#8b5cf6'};border-radius:6px;"></div>
@@ -2713,24 +2826,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="adm-card">
                   <div class="adm-card-title">🏆 Top 5 moins chères — ${selectedFuel}</div>
                   <div style="display:flex;flex-direction:column;gap:8px;">
-                    ${cheapest.map((s,i) => `
+                    ${c.cheapest.length ? c.cheapest.map((s,i) => `
                       <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:${i===0?'linear-gradient(135deg,#f0fdf4,#dcfce7)':'#f8fafc'};border-radius:12px;border:1px solid ${i===0?'#86efac':'#e2e8f0'};">
                         <div style="width:30px;height:30px;background:${i===0?'#22c55e':i===1?'#94a3b8':i===2?'#f59e0b':'#e2e8f0'};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${i<3?'#fff':'#64748b'};flex-shrink:0;">${i+1}</div>
                         <div style="flex:1;min-width:0;">
                           <div style="font-size:13px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</div>
-                          <div style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.address||''}</div>
                         </div>
-                        <div style="font-size:15px;font-weight:800;color:#16a34a;flex-shrink:0;">CHF ${s.prices[selectedFuel]}</div>
-                      </div>`).join('')}
+                        <div style="font-size:15px;font-weight:800;color:#16a34a;flex-shrink:0;">${c.currency} ${s.prices[selectedFuel]}</div>
+                      </div>`).join('') : '<div style="font-size:13px;color:#94a3b8;text-align:center;padding:24px;">Aucune donnée</div>'}
                   </div>
                 </div>
               </div>
-            </div>
+            </div>`).join('')}
           </div>
 
           <!-- Évolution -->
           <div class="adm-section" id="adm-sec-chart">
-            <div style="margin-bottom:24px;"><div style="font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;">Évolution des prix</div><div style="font-size:13px;color:#94a3b8;margin-top:3px;">Moyenne nationale par carburant sur 7 jours (CHF/L)</div></div>
+            <div style="margin-bottom:24px;"><div style="font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;">Évolution des prix (Suisse)</div><div style="font-size:13px;color:#94a3b8;margin-top:3px;">Moyenne nationale par carburant sur 7 jours (CHF/L)</div></div>
             <div class="adm-card">
               <div class="adm-card-title">📈 Courbe d'évolution — 7 derniers jours</div>
               <div style="position:relative;height:320px;width:100%;"><canvas id="adm-price-chart"></canvas></div>
@@ -2740,22 +2852,24 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Marques -->
           <div class="adm-section" id="adm-sec-brands">
             <div style="margin-bottom:24px;"><div style="font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;">Répartition par marque</div></div>
+            
+            ${countryStats.map(c => `
             <div class="adm-card">
-              <div class="adm-card-title">🏪 Top 10 enseignes</div>
-              ${topBrands.length === 0 ? '<div style="font-size:13px;color:#94a3b8;text-align:center;padding:24px;">Données de marque indisponibles — chargé depuis snapshot Firestore</div>' : `
+              <div class="adm-card-title">${c.flag} Top 10 enseignes (${c.label})</div>
+              ${c.topBrands.length === 0 ? '<div style="font-size:13px;color:#94a3b8;text-align:center;padding:24px;">Aucune donnée</div>' : `
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 32px;">
-                ${topBrands.map(([brand, cnt]) => `
+                ${c.topBrands.map(([brand, cnt]) => `
                   <div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
                       <span style="font-size:13px;font-weight:700;color:#1e293b;">${brand}</span>
                       <span style="font-size:13px;font-weight:800;color:#8b5cf6;">${cnt}</span>
                     </div>
                     <div style="background:#f1f5f9;border-radius:6px;height:7px;overflow:hidden;">
-                      <div style="height:100%;width:${Math.round((cnt/maxBrand)*100)}%;background:linear-gradient(90deg,#8b5cf6,#6366f1);border-radius:6px;"></div>
+                      <div style="height:100%;width:${Math.round((cnt/c.maxBrand)*100)}%;background:linear-gradient(90deg,#8b5cf6,#6366f1);border-radius:6px;"></div>
                     </div>
                   </div>`).join('')}
               </div>`}
-            </div>
+            </div>`).join('')}
           </div>
 
           <!-- Contrôles -->
@@ -2768,7 +2882,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   <button id="adm-clear-cache" class="adm-btn" style="background:#fef3c7;border-color:#fde68a;color:#92400e;">🗑 Vider le cache — forcer rechargement</button>
                   <button id="adm-reload-stations" class="adm-btn" style="background:#ede9fe;border-color:#ddd6fe;color:#5b21b6;">🔄 Recharger les stations maintenant</button>
                   <button id="adm-export-json" class="adm-btn" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534;">📥 Exporter données stations (JSON)</button>
-                  <button id="adm-export-csv" class="adm-btn" style="background:#f0f9ff;border-color:#bae6fd;color:#075985;margin-bottom:0;">📊 Exporter prix en CSV</button>
+                  <button id="adm-export-csv" class="adm-btn" style="background:#f0f9ff;border-color:#bae6fd;color:#075985;">📊 Exporter prix en CSV</button>
+                  <button id="adm-sync-pt" class="adm-btn" style="background:#f0fdfa;border-color:#99f6e4;color:#0f766e;margin-bottom:0;">🇵🇹 Rafraîchir les stations Portugal</button>
                 </div>
               </div>
               <div>
@@ -2798,17 +2913,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     {id:'adm-tog-debug',   key:'fillz_debug',       label:'Mode debug',          sub:'Logs techniques dans la console',               icon:'🐛'},
                     {id:'adm-tog-maint',   key:'fillz_maintenance', label:'Bannière maintenance', sub:'Bannière jaune en haut de l\'app',              icon:'🚧'},
                     {id:'adm-tog-update',  key:'fillz_update_mode', label:'Mode mise à jour',     sub:'Bloque l\'app avec l\'écran Fuelo',             icon:'🔧'},
+                    {id:'adm-tog-france',  key:'fillz_enable_france', label:'Activer la France',  sub:'Stations FR (Open Data gouv)',                  icon:'🇫🇷'},
+                    {id:'adm-tog-spain',   key:'fillz_enable_spain', label:'Activer l\'Espagne',  sub:'Stations ES (API Minetur)',                    icon:'🇪🇸'},
+                    {id:'adm-tog-portugal',key:'fillz_enable_portugal', label:'Activer le Portugal', sub:'Stations PT (DGEG, via backend)',           icon:'🇵🇹'},
+                    {id:'adm-tog-germany', key:'fillz_enable_germany', label:'Activer l\'Allemagne', sub:'Bientôt (Tankerkönig)',                     icon:'🇩🇪', disabled:true},
                     {id:'adm-tog-demo',    key:'fillz_force_demo',  label:'Forcer mode démo',     sub:'Utilise les stations de démo',                  icon:'🎭'},
+                    {id:'adm-tog-borders', key:'optitank_swiss_borders', label:'Frontières Suisse', sub:'Affiche le contour du pays sur la carte',   icon:'🗺️'},
+                    {id:'adm-tog-cities',  key:'optitank_swiss_cities', label:'Noms des villes', sub:'Affiche toutes les villes sur la carte',        icon:'📍'},
                   ].map((t,i,arr) => {
-                    const on = !!localStorage.getItem(t.key);
+                    const isCountry = COUNTRIES.some(c => c.enableKey === t.key);
+                    const on = isCountry ? (localStorage.getItem(t.key) === 'true') : !!localStorage.getItem(t.key);
                     return `
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;${i<arr.length-1?'border-bottom:1px solid #f1f5f9;':''}">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;${i<arr.length-1?'border-bottom:1px solid #f1f5f9;':''}${t.disabled?'opacity:0.45;':''}">
                       <div>
                         <div style="font-size:13px;font-weight:700;color:#1e293b;">${t.icon} ${t.label}</div>
                         <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${t.sub}</div>
                       </div>
-                      <div id="${t.id}-wrap" data-key="${t.key}" data-on="${on?'1':'0'}"
-                        style="width:46px;height:26px;background:${on?'#8b5cf6':'#e2e8f0'};border-radius:13px;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;">
+                      <div id="${t.id}-wrap" data-key="${t.key}" data-on="${on?'1':'0'}" data-disabled="${t.disabled?'1':'0'}"
+                        style="width:46px;height:26px;background:${on?'#8b5cf6':'#e2e8f0'};border-radius:13px;cursor:${t.disabled?'not-allowed':'pointer'};position:relative;transition:background 0.2s;flex-shrink:0;">
                         <div style="width:22px;height:22px;background:white;border-radius:50%;position:absolute;top:2px;left:0;transform:${on?'translateX(22px)':'translateX(2px)'};transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
                       </div>
                     </div>`;
@@ -2880,7 +3002,10 @@ document.addEventListener('DOMContentLoaded', () => {
                   <input id="adm-push-url" type="text" placeholder="https://optitank.online"
                     style="width:100%;box-sizing:border-box;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#1e293b;margin-bottom:14px;">
                   <button id="adm-send-push" style="width:100%;padding:13px;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:none;border-radius:11px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">
-                    🚀 Envoyer via Cloud Function
+                    🚀 Envoyer à cet appareil
+                  </button>
+                  <button id="adm-send-push-all" style="width:100%;padding:13px;background:linear-gradient(135deg,#ec4899,#e11d48);border:none;border-radius:11px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">
+                    🌍 Envoyer à TOUS LES APPAREILS
                   </button>
                   <button id="adm-test-browser-push" style="width:100%;padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:11px;color:#166534;font-size:13px;font-weight:700;cursor:pointer;">
                     🔔 Test navigateur (local)
@@ -2985,7 +3110,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         if (!auth.currentUser) throw new Error('Non connecté');
         const idToken = await auth.currentUser.getIdToken();
-        const resp = await fetch('https://us-central1-optitank-c7709.cloudfunctions.net/sendPush', {
+        const resp = await fetch('https://us-central1-optitank-c7709.cloudfunctions.net/sendPushNotif', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
           body: JSON.stringify({ data: { token, title, body, data: url ? { url } : undefined } }),
@@ -2998,21 +3123,66 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    document.getElementById('adm-send-push-all')?.addEventListener('click', async () => {
+      const title = document.getElementById('adm-push-title')?.value.trim();
+      const body  = document.getElementById('adm-push-body')?.value.trim();
+      const url   = document.getElementById('adm-push-url')?.value.trim();
+      const tokens = window.__adminPushTokens || [];
+      if (tokens.length === 0) { showAdminToast("⚠ Veuillez d'abord actualiser la liste des appareils (aucun appareil trouvé)", '#f59e0b', '#1c1917'); return; }
+      if (!title) { showAdminToast('⚠ Entrez un titre', '#f59e0b', '#1c1917'); return; }
+      if (!confirm(`Envoyer "${title}" à ${tokens.length} appareils ?`)) return;
+      showAdminToast(`📤 Envoi à ${tokens.length} appareils en cours...`, '#ec4899', '#fff');
+      try {
+        if (!auth.currentUser) throw new Error('Non connecté');
+        const idToken = await auth.currentUser.getIdToken();
+        const resp = await fetch('https://us-central1-optitank-c7709.cloudfunctions.net/sendPushNotif', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+          body: JSON.stringify({ data: { token: tokens, title, body, data: url ? { url } : undefined } }),
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || 'Erreur serveur');
+        showAdminToast('✓ Notifications envoyées avec succès à tous', '#22c55e', '#052e16');
+      } catch(e) {
+        showAdminToast('✗ Erreur: ' + (e.message || e), '#ef4444', '#fff');
+      }
+    });
+
     document.getElementById('adm-clear-cache').onclick = () => {
-      localStorage.removeItem('fillz_stations_cache_v3');
-      localStorage.removeItem('fillz_admin_stations_cache');
+      clearStationCache();
       showAdminToast('✓ Cache vidé — les stations seront rechargées au prochain démarrage', '#f59e0b', '#1c1917');
     };
 
     document.getElementById('adm-reload-stations').onclick = async () => {
-      localStorage.removeItem('fillz_stations_cache_v3');
+      await clearStationCache();
       showAdminToast('🔄 Rechargement en cours...', '#8b5cf6', '#fff');
       try {
-        const { fetchTCSStations: fetch_ } = await import('./api.js');
+        const { fetchAllStations: fetch_ } = await import('./api.js');
         allStations = await fetch_();
+        if (typeof renderMarkersProgressive === 'function') renderMarkersProgressive();
         showAdminToast(`✓ ${allStations.length} stations rechargées`, '#22c55e', '#052e16');
       } catch(e) { showAdminToast('✗ Erreur lors du rechargement', '#ef4444', '#fff'); }
     };
+
+    document.getElementById('adm-sync-pt')?.addEventListener('click', async () => {
+      const btn = document.getElementById('adm-sync-pt');
+      if (!auth.currentUser) { showAdminToast('✗ Connecte-toi en admin', '#ef4444', '#fff'); return; }
+      btn.disabled = true;
+      showAdminToast('🇵🇹 Agrégation DGEG en cours (≈1 min)...', '#0f766e', '#fff');
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+        const resp = await fetch('https://us-central1-optitank-c7709.cloudfunctions.net/syncPortugalNow', {
+          headers: { 'Authorization': `Bearer ${idToken}` },
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Erreur');
+        await clearStationCache(['fillz_stations_pt_v1']);
+        showAdminToast(`✓ Portugal mis à jour (${data.count} stations)`, '#22c55e', '#052e16');
+      } catch (e) {
+        showAdminToast('✗ ' + e.message, '#ef4444', '#fff');
+      }
+      btn.disabled = false;
+    });
 
     document.getElementById('adm-export-json').onclick = () => {
       const blob = new Blob([JSON.stringify(allStations, null, 2)], {type:'application/json'});
@@ -3046,6 +3216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wire up toggles with real handlers
     overlay.querySelectorAll('[id$="-wrap"][data-key]').forEach(wrap => {
       wrap.addEventListener('click', () => {
+        if (wrap.dataset.disabled === '1') return; // pays pas encore branché
         const isOn = wrap.dataset.on === '1';
         const newOn = !isOn;
         wrap.dataset.on = newOn ? '1' : '0';
@@ -3053,7 +3224,10 @@ document.addEventListener('DOMContentLoaded', () => {
         thumb.style.transform = newOn ? 'translateX(22px)' : 'translateX(2px)';
         wrap.style.background = newOn ? '#8b5cf6' : '#e2e8f0';
         const key = wrap.dataset.key;
-        if (newOn) localStorage.setItem(key, '1');
+        // Pays activables : convention 'true'/'false' (lue par fetchAllStations + au chargement).
+        const country = COUNTRIES.find(c => c.enableKey === key);
+        if (country) localStorage.setItem(key, newOn ? 'true' : 'false');
+        else if (newOn) localStorage.setItem(key, '1');
         else localStorage.removeItem(key);
         // Apply effects immediately
         if (key === 'fillz_maintenance') applyMaintenanceBanner(newOn);
@@ -3063,6 +3237,41 @@ document.addEventListener('DOMContentLoaded', () => {
         if (firestoreKey) {
           setDoc(doc(db, 'app_config', 'settings'), { [firestoreKey]: newOn }, { merge: true }).catch(() => {});
           showAdminToast(newOn ? `✓ Activé sur tous les appareils` : `✓ Désactivé sur tous les appareils`, '#22c55e', '#052e16');
+        } else if (country) {
+          if (key === 'fillz_enable_france') window.enableFranceConfig = newOn;
+          // Propage l'activation à tous les appareils via Firestore.
+          if (country.cfg) setDoc(doc(db, 'app_config', 'settings'), { [country.cfg]: newOn }, { merge: true }).catch(() => {});
+          showAdminToast(`🔄 ${newOn ? 'Chargement' : 'Suppression'} des stations ${country.flag}...`, '#8b5cf6', '#fff');
+          import('./api.js').then(({ fetchAllStations: fetch_ }) => {
+            fetch_().then(data => {
+              allStations = data;
+              if (typeof renderMarkersProgressive === 'function') renderMarkersProgressive();
+              if (typeof window.triggerMapLayerUpdate === 'function') window.triggerMapLayerUpdate();
+              showAdminToast(newOn ? `✓ ${country.label} activé (${data.length} stations au total)` : `✓ ${country.label} désactivé`, '#22c55e', '#052e16');
+            });
+          });
+        } else if (key === 'fillz_force_demo') {
+          if (newOn) {
+            allStations = [
+              { id:'f1', name:'Garage Emery Sàrl', address:'Route de Sullens 9, 1303 Penthaz', lat:46.5947, lng:6.5413, prices:{SP95:'1.920',Diesel:'2.230'}, city:'Penthaz' },
+              { id:'f2', name:'Station Bavois', address:'Autoroute A1, 1372 Bavois', lat:46.6833, lng:6.5667, prices:{SP95:'1.950',Diesel:'2.100'}, city:'Bavois' },
+            ];
+            if (typeof renderMarkersProgressive === 'function') renderMarkersProgressive();
+            if (typeof window.triggerMapLayerUpdate === 'function') window.triggerMapLayerUpdate();
+            showAdminToast(`✓ Mode Démo Activé`, '#22c55e', '#052e16');
+          } else {
+            showAdminToast('🔄 Rechargement des vraies stations...', '#8b5cf6', '#fff');
+            import('./api.js').then(({ fetchAllStations: fetch_ }) => {
+              fetch_().then(data => {
+                allStations = data;
+                if (typeof renderMarkersProgressive === 'function') renderMarkersProgressive();
+                if (typeof window.triggerMapLayerUpdate === 'function') window.triggerMapLayerUpdate();
+                showAdminToast(`✓ Mode Démo Désactivé`, '#22c55e', '#052e16');
+              });
+            });
+          }
+        } else if (key === 'optitank_swiss_borders' || key === 'optitank_swiss_cities') {
+          if (typeof window.triggerMapLayerUpdate === 'function') window.triggerMapLayerUpdate();
         }
       });
     });
@@ -3085,6 +3294,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         listEl.innerHTML = entries.map(({ token, uid, platform }) => {
+          window.__adminPushTokens = entries.map(e => e.token);
           const short = token.length > 24 ? token.slice(0, 24) + '…' : token;
           return `<div style="padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;margin-bottom:4px;" onclick="document.getElementById('adm-push-token').value='${token.replace(/'/g, "\\'")}';this.style.background='#ede9fe';">
             <div style="font-size:11px;font-weight:700;color:#1e293b;">${platform} — ${uid ? uid.slice(0,8) + '…' : 'anonyme'}</div>
@@ -3184,6 +3394,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (upd !== !!localStorage.getItem('fillz_update_mode')) {
         if (upd) localStorage.setItem('fillz_update_mode', '1'); else localStorage.removeItem('fillz_update_mode');
         applyUpdateMode(upd);
+      }
+
+      // Sync de l'activation des pays (propagée à tous les appareils).
+      let countryChanged = false;
+      COUNTRIES.forEach(c => {
+        if (!c.cfg) return;
+        const want = !!cfg[c.cfg];
+        if (want !== (localStorage.getItem(c.enableKey) === 'true')) {
+          localStorage.setItem(c.enableKey, want ? 'true' : 'false');
+          if (c.code === 'FR') window.enableFranceConfig = want;
+          countryChanged = true;
+        }
+      });
+      if (countryChanged) {
+        fetchAllStations().then(data => {
+          allStations = data;
+          _stationPreload = Promise.resolve(data); // évite que loadMapData réutilise l'ancien préchargement
+          if (dataLoaded && mapInstance && typeof renderMarkersProgressive === 'function') renderMarkersProgressive();
+        }).catch(() => {});
       }
 
       // Version check → force SW cache clear + reload if version changed
@@ -3286,6 +3515,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── MAP DATA ───────────────────────────────────────────
   let backgroundLoadTimer = null;
+  // Signature de l'état affiché : évite de reconstruire les 20k+ marqueurs à
+  // chaque déplacement de carte quand ni le filtre ni les données n'ont changé.
+  let renderedMarkersSig = null;
+  function markersSig() {
+    return `${selectedFuel}|${selectedBrandFilter}|${allStations.length}`;
+  }
 
   async function loadMapData() {
     if (dataLoaded) { renderMarkersProgressive(); return; }
@@ -3303,7 +3538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // Prefer the background preload kicked off at DOMContentLoaded — instant if it already resolved.
       allStations = await _stationPreload;
-      if (!allStations || !allStations.length) allStations = await fetchTCSStations();
+      if (!allStations || !allStations.length) allStations = await fetchAllStations();
     } catch(err) {
       console.error(err);
       allStations = [];
@@ -3406,9 +3641,10 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (price >= avgPrice + 0.02) colorClass = 'marker-expensive';
     }
     
+    const prefix = currencyFor(s.country);
     const icon = L.divIcon({ 
       className: 'custom-marker', 
-      html: `<div class="marker-pill ${colorClass}"><i class="ph-fill ph-gas-pump"></i> CHF ${s.prices[selectedFuel]}</div>`, 
+      html: `<div class="marker-pill ${colorClass}"><i class="ph-fill ph-gas-pump"></i> ${prefix} ${s.prices[selectedFuel]}</div>`, 
       iconSize: [120, 36], 
       iconAnchor: [60, 18] 
     });
@@ -3425,10 +3661,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!mapInstance) return;
     if (markersLayer) mapInstance.removeLayer(markersLayer);
     if (backgroundLoadTimer) clearTimeout(backgroundLoadTimer);
+    renderedMarkersSig = null;
+    const sig = markersSig();
 
     markersLayer = L.markerClusterGroup({
       maxClusterRadius: 60, disableClusteringAtZoom: 14,
       showCoverageOnHover: false, spiderfyOnMaxZoom: true,
+      chunkedLoading: true, chunkInterval: 200, chunkDelay: 50,
       iconCreateFunction(cluster) {
         const c = cluster.getChildCount();
         const sz = c > 50 ? 'large' : c > 20 ? 'medium' : 'small';
@@ -3448,8 +3687,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const avgPrice = validCount > 0 ? totalPrice / validCount : null;
 
-    // Phase 1: Render visible stations immediately
-    inView.forEach(s => markersLayer.addLayer(createMarker(s, avgPrice)));
+    // Phase 1: Render visible stations immediately (addLayers = insertion en
+    // masse chunkée du plugin cluster, bien plus rapide que addLayer un à un)
+    markersLayer.addLayers(inView.map(s => createMarker(s, avgPrice)));
     mapInstance.addLayer(markersLayer);
 
     const countEl = document.getElementById('chip-count');
@@ -3458,7 +3698,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Phase 2: Load remaining stations in background (after 300ms)
     backgroundLoadTimer = setTimeout(() => {
       const remaining = allFiltered.filter(s => !inViewIds.has(s.id));
-      remaining.forEach(s => markersLayer.addLayer(createMarker(s, avgPrice)));
+      markersLayer.addLayers(remaining.map(s => createMarker(s, avgPrice)));
+      renderedMarkersSig = sig;
     }, 300);
   }
 
@@ -3472,11 +3713,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (hasGeoloc) {
       mapInstance.setView([userLat, userLng], 13);
+    } else if (window.userPreloadLat && window.userPreloadLng) {
+      userLat = window.userPreloadLat; userLng = window.userPreloadLng; hasGeoloc = true;
+      mapInstance.setView([userLat, userLng], 13);
     }
     tileLayer = L.tileLayer(MAP_TILES[currentMapTheme].url, MAP_TILES[currentMapTheme].opts).addTo(mapInstance);
     document.getElementById('leaflet-map').classList.add('theme-' + currentMapTheme);
     const userIcon = L.divIcon({ className: 'user-marker', html: '<div class="user-dot"></div>', iconSize: [24, 24], iconAnchor: [12, 12] });
-    if (!isFirstVisit) {
+    if (localStorage.getItem('fillz_location_granted') !== '0') {
       window.getAppLocation(
         p => {
           userLat = p.coords.latitude; userLng = p.coords.longitude;
@@ -3490,9 +3734,10 @@ document.addEventListener('DOMContentLoaded', () => {
         () => {}
       );
     }
-    // On map move-end, if data is loaded, refresh visible markers
+    // Au move-end, ne reconstruire que si tous les marqueurs ne sont pas déjà
+    // affichés — une fois la phase 2 terminée, un déplacement ne change rien.
     mapInstance.on('moveend', () => {
-      if (dataLoaded) renderMarkersProgressive();
+      if (dataLoaded && renderedMarkersSig !== markersSig()) renderMarkersProgressive();
     });
     loadMapData();
 
@@ -3502,6 +3747,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const btn = document.getElementById('btn-gps-locate');
       const ico = btn.querySelector('i');
       ico.className = 'ph-fill ph-spinner-gap spin';
+      localStorage.setItem('fillz_location_granted', '1');
       window.getAppLocation(
         p => {
           userLat = p.coords.latitude; 
@@ -3520,6 +3766,87 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       );
     });
+
+    // Swiss Overlay Logic
+    let swissOverlayLayer = null;
+
+    window.triggerMapLayerUpdate = function() {
+      try {
+        if (swissOverlayLayer && mapInstance) {
+          mapInstance.removeLayer(swissOverlayLayer);
+          swissOverlayLayer = null;
+        }
+        loadSwissOverlay();
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    window.triggerMapLayerUpdate();
+
+    function loadSwissOverlay() {
+      try {
+        const showBorders = localStorage.getItem('optitank_swiss_borders') === '1';
+        const showCities = localStorage.getItem('optitank_swiss_cities') === '1';
+        if (!showBorders && !showCities) return;
+
+        swissOverlayLayer = L.layerGroup();
+        
+        // Load GeoJSON
+        if (showBorders) {
+          fetch('/coverage.geojson')
+            .then(res => res.json())
+            .then(data => {
+              L.geoJSON(data, {
+                style: {
+                  color: '#8B84FF',
+                  weight: 2,
+                  opacity: 0.6,
+                  fillColor: '#8B84FF',
+                  fillOpacity: 0.02,
+                  dashArray: '5, 8'
+                },
+                interactive: false
+              }).addTo(swissOverlayLayer);
+            }).catch(err => console.error('Overlay geojson error:', err));
+        }
+          
+        // Add Cities
+        if (showCities && allStations.length > 0) {
+          const cityMap = new Map(); // name -> {latSum, lngSum, count}
+          allStations.forEach(st => {
+            if (st.city && st.lat && st.lng) {
+               const c = st.city.trim().toUpperCase();
+               if (!cityMap.has(c)) cityMap.set(c, {latSum:0, lngSum:0, count:0, name: st.city.trim()});
+               const data = cityMap.get(c);
+               data.latSum += parseFloat(st.lat);
+               data.lngSum += parseFloat(st.lng);
+               data.count++;
+            }
+          });
+
+          cityMap.forEach(data => {
+            if (data.count >= 2) {
+              const avgLat = data.latSum / data.count;
+              const avgLng = data.lngSum / data.count;
+              L.marker([avgLat, avgLng], {
+                icon: L.divIcon({
+                  className: 'city-label',
+                  html: data.name
+                }),
+                interactive: false
+              }).addTo(swissOverlayLayer);
+            }
+          });
+        }
+        
+        if (mapInstance && (showBorders || showCities)) {
+          swissOverlayLayer.addTo(mapInstance);
+        }
+      } catch (e) {
+        console.error("Erreur loadSwissOverlay:", e);
+      }
+    }
   }
 
   // ── Navigate to station on map ─────────────────────────
@@ -3561,6 +3888,20 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('fillz_favs', JSON.stringify(favorites));
     syncToFirestore();
     sendWidgetUpdate();
+  });
+
+  document.getElementById('bs-share')?.addEventListener('click', () => {
+    if (!selectedStation || !navigator.share) {
+      if (!navigator.share) showToast('Partage natif non supporté sur cet appareil', 'orange');
+      return;
+    }
+    const price = selectedStation.prices[selectedFuel] || Object.values(selectedStation.prices)[0];
+    const currency = currencyFor(selectedStation.country);
+    navigator.share({
+      title: 'OptiTank',
+      text: `Regarde ce prix : ${currency} ${parseFloat(price).toFixed(3)} à la station ${selectedStation.brand || selectedStation.name} ! ⛽️`,
+      url: window.location.href
+    }).catch(console.error);
   });
 
   const bsheet = document.getElementById('station-bottom-sheet');
@@ -3706,9 +4047,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     canvas.style.opacity = '1';
 
-    if (data.length < 2) {
+    const validData = data.filter(Boolean);
+    if (validData.length < 2) {
       if (emptyEl) emptyEl.style.display = 'block';
       canvas.style.opacity = '0.3';
+      return;
     } else {
       if (emptyEl) emptyEl.style.display = 'none';
     }
@@ -3716,8 +4059,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (detHistoryChart) { detHistoryChart.destroy(); detHistoryChart = null; }
 
     const ctx = canvas.getContext('2d');
-    const minVal = Math.min(...data.filter(Boolean)) - 0.02;
-    const maxVal = Math.max(...data.filter(Boolean)) + 0.02;
+    const minVal = Math.min(...validData) - 0.02;
+    const maxVal = Math.max(...validData) + 0.02;
 
     detHistoryChart = new Chart(ctx, {
       type: 'line',
@@ -3947,7 +4290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!allStations.length) {
       // Use the background preload if it's already done, else fall back to a fresh fetch
       try { allStations = (await _stationPreload) || []; } catch(_) { allStations = []; }
-      if (!allStations.length) allStations = await fetchTCSStations();
+      if (!allStations.length) allStations = await fetchAllStations();
     }
 
     const vFuel = getVehicleFuel();
@@ -4210,8 +4553,8 @@ document.addEventListener('DOMContentLoaded', () => {
           provider.setCustomParameters({ locale: 'fr' });
           if (window.isOptiTankApp) {
             sessionStorage.setItem('_pendingDeleteAccount', '1');
-            await signInWithRedirect(auth, provider);
-            return;
+            await signInWithPopup(auth, provider);
+            await doDelete();
           } else {
             await signInWithPopup(auth, provider);
             await doDelete();
@@ -4224,6 +4567,20 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Erreur suppression : ' + (err?.message || 'inconnue'), 'error');
         if (btn) { btn.disabled = false; btn.textContent = 'Supprimer définitivement mon compte'; }
       }
+    }
+  });
+
+  document.getElementById('btn-support')?.addEventListener('click', () => {
+    window.location.href = '/support.html';
+  });
+
+  document.getElementById('btn-request-notifications')?.addEventListener('click', () => {
+    localStorage.setItem('fillz_push_granted', '1');
+    if (window.isOptiTankApp && window.OptiTankBridge) {
+      window.OptiTankBridge.post({ type: 'requestNotifications' });
+      showToast('Autorisations demandées !', 'success');
+    } else {
+      showToast("Notifications disponibles uniquement sur l'app iOS.", 'info');
     }
   });
 
@@ -4299,10 +4656,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('station-bottom-sheet')?.classList.remove('active');
   });
   document.getElementById('bs-go')?.addEventListener('click', () => {
-    if (selectedStation) flyToStation(selectedStation);
+    if (selectedStation) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const url = isIOS ? `https://maps.apple.com/?daddr=${selectedStation.lat},${selectedStation.lng}` : `https://www.google.com/maps/dir/?api=1&destination=${selectedStation.lat},${selectedStation.lng}`;
+      if (window.isOptiTankApp) window.location.href = url;
+      else window.open(url, '_blank');
+    }
   });
   document.getElementById('det-go')?.addEventListener('click', () => {
-    if (selectedStation) flyToStation(selectedStation);
+    if (selectedStation) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const url = isIOS ? `https://maps.apple.com/?daddr=${selectedStation.lat},${selectedStation.lng}` : `https://www.google.com/maps/dir/?api=1&destination=${selectedStation.lat},${selectedStation.lng}`;
+      if (window.isOptiTankApp) window.location.href = url;
+      else window.open(url, '_blank');
+    }
   });
   document.getElementById('det-fav')?.addEventListener('click', () => {
     if (!selectedStation) return;
@@ -4371,12 +4738,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (days.length > 30) {
       days.slice(0, days.length - 30).forEach(d => delete priceHistory[d]);
     }
-    localStorage.setItem('fillz_price_history', JSON.stringify(priceHistory));
+    try {
+      localStorage.setItem('fillz_price_history', JSON.stringify(priceHistory));
+    } catch {
+      // Quota localStorage dépassé (gros volumes FR/ES) : on retente avec 7 jours.
+      const keep = Object.keys(priceHistory).sort().slice(-7);
+      priceHistory = Object.fromEntries(keep.map(d => [d, priceHistory[d]]));
+      try { localStorage.setItem('fillz_price_history', JSON.stringify(priceHistory)); } catch {}
+    }
   }
 
   let statsChartInstance = null;
   let statsSelectedIds = new Set();
   let statsFuel = selectedFuel;
+  let _statsFirestoreHistory = null; // cache Firestore pour la session
 
   function getStationColors() {
     return [
@@ -4385,9 +4760,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
   }
 
-  function renderStatsView() {
-    const history = JSON.parse(localStorage.getItem('fillz_price_history') || '{}');
-    const days = Object.keys(history).sort();
+  async function renderStatsView() {
     const stationListEl = document.getElementById('stats-station-list');
     const emptyEl = document.getElementById('stats-empty');
     const legendEl = document.getElementById('stats-legend');
@@ -4405,6 +4778,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const kpiSavingsEl = document.getElementById('kpi-savings');
     if (kpiRefuelsEl) kpiRefuelsEl.textContent = refuelsData.length;
     if (kpiSavingsEl) kpiSavingsEl.textContent = `CHF ${kpiSavings.toFixed(0)}`;
+
+    // Fusionner localStorage + Firestore (favoris, 14 jours)
+    // Firestore est la source principale — localStorage complète avec les snapshots locaux
+    const localHistory = JSON.parse(localStorage.getItem('fillz_price_history') || '{}');
+
+    if (favorites.length && !_statsFirestoreHistory) {
+      try {
+        const merged = JSON.parse(JSON.stringify(localHistory));
+        await Promise.all(favorites.slice(0, 10).map(async (favId) => {
+          try {
+            const stName = allStations.find(s => s.id === favId)?.name || favId;
+            const fsHist = await fetchStationHistory(favId, 14);
+            Object.entries(fsHist).forEach(([day, prices]) => {
+              if (!merged[day]) merged[day] = {};
+              if (!merged[day][favId]) merged[day][favId] = { name: stName, prices };
+            });
+          } catch(_) {}
+        }));
+        _statsFirestoreHistory = merged;
+      } catch(_) {}
+    }
+    const history = _statsFirestoreHistory || localHistory;
+    const days = Object.keys(history).sort();
+
     // Avg and best price from history
     const kpiAvgEl = document.getElementById('kpi-avg-price');
     const kpiBestEl = document.getElementById('kpi-best-price');
@@ -4435,13 +4832,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (emptyEl) emptyEl.style.display = 'none';
 
-    // Collect all station IDs that have data for statsFuel
+    // Collect all station IDs that have data for statsFuel and are in favorites
     const allStationIds = new Map(); // id -> name
     days.forEach(d => {
       const snap = history[d];
       Object.entries(snap).forEach(([id, info]) => {
-        if (info.prices[statsFuel] && !allStationIds.has(id)) {
-          allStationIds.set(id, info.name);
+        if (info.prices[statsFuel] && !allStationIds.has(id) && favorites.includes(id)) {
+          // Prioritise live allStations name — fallback to stored name, then ID
+          const resolvedName = allStations.find(s => s.id === id)?.name || info.name || id;
+          allStationIds.set(id, resolvedName);
         }
       });
     });
@@ -4474,7 +4873,6 @@ document.addEventListener('DOMContentLoaded', () => {
           if (statsSelectedIds.has(sid)) statsSelectedIds.delete(sid);
           else statsSelectedIds.add(sid);
           renderStatsChart(history, days, Array.from(allStationIds.entries()));
-          // Update chip style
           btn.classList.toggle('sel', statsSelectedIds.has(sid));
         });
       });
@@ -4488,6 +4886,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearBtn.onclick = () => {
         if (confirm('Effacer l\'historique des prix ?')) {
           localStorage.removeItem('fillz_price_history');
+          _statsFirestoreHistory = null;
           statsSelectedIds.clear();
           renderStatsView();
         }
@@ -4496,6 +4895,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderStatsChart(history, days, stationEntries) {
+    const emptyEl = document.getElementById('stats-empty');
+    if (days.length < 2) {
+      if (emptyEl) {
+        emptyEl.style.display = 'flex';
+        emptyEl.innerHTML = `<i class="ph-bold ph-chart-line-up" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i><p style="font-size:14px;">Il faut au moins 2 jours d'historique<br>pour afficher une courbe. Revenez demain !</p>`;
+      }
+      if (statsChartInstance) { statsChartInstance.destroy(); statsChartInstance = null; }
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+
     const colors = getStationColors();
     const datasets = [];
     let colorIdx = 0;
@@ -4652,7 +5062,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loader) loader.style.display = 'block';
     
     try {
-      if (!window.Tesseract) throw new Error("Tesseract.js non chargé.");
+      if (!window.Tesseract) {
+        const tesseractModule = await import('tesseract.js');
+        window.Tesseract = tesseractModule.default || tesseractModule;
+      }
       const result = await window.Tesseract.recognize(file, 'fra', { logger: m => console.log(m) });
       const text = result.data.text;
       console.log('OCR Output:', text);
@@ -4744,7 +5157,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       resDiv.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">Analyse de ${allStations.length} stations sur ${distRoute.toFixed(0)}km...</p>`;
       
-      if (!allStations.length) allStations = await fetchTCSStations();
+      if (!allStations.length) allStations = await fetchAllStations();
       
       const vFuel = getVehicleFuel();
       const MAX_DEV = 4; // km de déviation max
@@ -4789,7 +5202,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
             <div class="rrc-right" style="text-align:right">
-              <div class="rrc-price">CHF ${s.pricePerL.toFixed(3)}</div>
+              <div class="rrc-price">${currencyFor(s.country)} ${s.pricePerL.toFixed(3)}</div>
               <div style="font-size:10px; color:var(--text-muted);">Coût trajet: CHF ${tripCost.toFixed(1)}</div>
             </div>
           </div>`;
@@ -4813,7 +5226,252 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     btn.disabled = false;
-    btn.innerHTML = '<i class="ph-bold ph-route"></i> Calculer l\'itinéraire IA';
+    btn.innerHTML = '<i class="ph-bold ph-list-magnifying-glass"></i> Juste les stations les moins chères';
+  });
+
+  // ── PLANIFICATEUR DE TRAJET IA (arrêts carburant optimisés) ──
+  const PLAN_FN_URL = 'https://us-central1-optitank-c7709.cloudfunctions.net/planRoute';
+  let routePlanMarkers = null;
+
+  function fullTankAutonomyKm() {
+    const conso = FUEL_CONSUMPTION[getVehicleFuel()] || 7.5;
+    const tank = getTankSize() || 0;
+    if (!tank || !conso) return 0;
+    return Math.round((tank / conso) * 100);
+  }
+
+  // Pré-remplit le champ autonomie avec l'autonomie plein du véhicule.
+  (function initAutonomyField() {
+    const el = document.getElementById('route-autonomy');
+    if (!el) return;
+    const ft = fullTankAutonomyKm();
+    if (ft > 0) {
+      el.placeholder = `Autonomie restante (km) — plein ≈ ${ft} km`;
+      if (!el.value) el.value = ft;
+    }
+  })();
+
+  // Planificateur déterministe (repli + réparation du plan IA).
+  // À chaque tronçon où la destination n'est pas atteignable, on doit s'arrêter
+  // avant (pos + range - reserve) ; on y choisit la station la moins chère.
+  function computeGreedyPlan(cands, p) {
+    const stops = [];
+    let pos = 0, range = p.currentAutonomyKm, guard = 0;
+    while (p.totalDistanceKm - pos > range - p.reserveKm) {
+      if (guard++ > 60) break;
+      const reach = pos + range - p.reserveKm;
+      const window = cands.filter(s => s.progressKm > pos + 0.1 && s.progressKm <= reach);
+      if (!window.length) return { stops, infeasible: true };
+      window.sort((a, b) => a.price - b.price || a.devKm - b.devKm);
+      const chosen = window[0];
+      stops.push({ stationId: chosen.id, reason: 'Station la moins chère atteignable sur ce tronçon' });
+      pos = chosen.progressKm;
+      range = p.fullTankAutonomyKm;
+    }
+    return { stops, infeasible: false };
+  }
+
+  // Vérifie qu'une séquence d'arrêts (objets candidats triés) est atteignable.
+  function planIsFeasible(stopObjs, p) {
+    let pos = 0, range = p.currentAutonomyKm;
+    for (const s of stopObjs) {
+      if (s.progressKm > pos + range - p.reserveKm + 0.5) return false;
+      pos = s.progressKm;
+      range = p.fullTankAutonomyKm;
+    }
+    return (p.totalDistanceKm - pos) <= (range - p.reserveKm + 0.5);
+  }
+
+  document.getElementById('btn-plan-route')?.addEventListener('click', async () => {
+    const startQ = document.getElementById('route-start').value;
+    const endQ = document.getElementById('route-end').value;
+    const autoEl = document.getElementById('route-autonomy');
+    const btn = document.getElementById('btn-plan-route');
+    const resDiv = document.getElementById('route-results');
+
+    if (!startQ || !endQ) return alert('Veuillez entrer un départ et une arrivée.');
+    let currentAutonomyKm = parseFloat(autoEl.value);
+    if (!currentAutonomyKm || currentAutonomyKm <= 0) currentAutonomyKm = fullTankAutonomyKm();
+    if (!currentAutonomyKm || currentAutonomyKm <= 0) return alert('Indiquez votre autonomie restante (en km).');
+
+    const fullTank = fullTankAutonomyKm() || currentAutonomyKm;
+    const vFuel = getVehicleFuel();
+    const conso = FUEL_CONSUMPTION[vFuel] || 7.5;
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner-small"></div> Planification IA…';
+    const emptyState = document.getElementById('route-empty-state');
+    if (emptyState) emptyState.style.display = 'none';
+    resDiv.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">Géocodage & calcul du trajet…</p>`;
+
+    try {
+      const startLoc = await geocode(startQ);
+      const endLoc = await geocode(endQ);
+      if (!startLoc || !endLoc) throw new Error('Cité/Code postal introuvable. Soyez plus précis.');
+
+      const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${startLoc.lon},${startLoc.lat};${endLoc.lon},${endLoc.lat}?overview=full&geometries=geojson`);
+      const osrmData = await osrmRes.json();
+      if (osrmData.code !== 'Ok') throw new Error('Trajet impossible.');
+
+      const routeCoords = osrmData.routes[0].geometry.coordinates; // [lon,lat][]
+      const totalDistanceKm = osrmData.routes[0].distance / 1000;
+
+      // Distance cumulée depuis le départ à chaque sommet de la polyline.
+      const cum = new Array(routeCoords.length).fill(0);
+      for (let i = 1; i < routeCoords.length; i++) {
+        cum[i] = cum[i - 1] + getDistKm(routeCoords[i - 1][1], routeCoords[i - 1][0], routeCoords[i][1], routeCoords[i][0]);
+      }
+
+      // Dessin de la route.
+      if (!mapInstance) initMap();
+      if (currentRoutePolyline) mapInstance.removeLayer(currentRoutePolyline);
+      currentRoutePolyline = L.polyline(routeCoords.map(c => [c[1], c[0]]), { color: '#8b5cf6', weight: 5, opacity: 0.85, dashArray: '10,10' }).addTo(mapInstance);
+
+      resDiv.innerHTML = `<p style="text-align:center;color:var(--text-muted);padding:20px;">Analyse des stations sur ${totalDistanceKm.toFixed(0)} km…</p>`;
+      if (!allStations.length) allStations = await fetchAllStations();
+
+      // Stations candidates le long du trajet (≤ 6 km de déviation).
+      const DEV_MAX = 6;
+      const byId = {};
+      const candidates = allStations
+        .filter(s => s.prices[vFuel])
+        .map(s => {
+          let minD = Infinity, bestI = 0;
+          for (let i = 0; i < routeCoords.length; i += 2) {
+            const d = getDistKm(s.lat, s.lng, routeCoords[i][1], routeCoords[i][0]);
+            if (d < minD) { minD = d; bestI = i; }
+          }
+          return { id: s.id, name: s.name, brand: s.brand, city: s.city, country: s.country, lat: s.lat, lng: s.lng, devKm: +minD.toFixed(2), progressKm: +cum[bestI].toFixed(1), price: parseFloat(s.prices[vFuel]) };
+        })
+        .filter(s => s.devKm <= DEV_MAX && s.progressKm > 1 && s.progressKm < totalDistanceKm - 1)
+        .sort((a, b) => a.progressKm - b.progressKm);
+      candidates.forEach(c => { byId[c.id] = c; });
+
+      const compact = candidates
+        .map(c => ({ id: c.id, name: c.name, brand: c.brand, city: c.city, progressKm: c.progressKm, devKm: c.devKm, price: c.price }))
+        .slice(0, 60);
+
+      const reserveKm = Math.max(5, Math.round(currentAutonomyKm * 0.08));
+      const params = { currentAutonomyKm, fullTankAutonomyKm: fullTank, reserveKm, totalDistanceKm };
+
+      let stops = null, explanation = '';
+      if (totalDistanceKm <= currentAutonomyKm - reserveKm) {
+        stops = [];
+        explanation = `Tu peux rejoindre ta destination sans refaire le plein : ${totalDistanceKm.toFixed(0)} km pour environ ${Math.round(currentAutonomyKm)} km d'autonomie.`;
+      } else {
+        try {
+          const user = auth.currentUser;
+          if (!user) throw new Error('not-auth');
+          const idToken = await user.getIdToken();
+          const resp = await fetch(PLAN_FN_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+            body: JSON.stringify({ candidates: compact, ...params, fuel: vFuel, currency: 'CHF' }),
+          });
+          if (!resp.ok) throw new Error('plan-fn');
+          const data = await resp.json();
+          const llmStops = (data.stops || [])
+            .map(st => byId[st.stationId] ? { ...byId[st.stationId], reason: st.reason } : null)
+            .filter(Boolean)
+            .sort((a, b) => a.progressKm - b.progressKm);
+          if (!planIsFeasible(llmStops, params)) throw new Error('infeasible');
+          stops = llmStops;
+          explanation = data.explanation || '';
+        } catch (e) {
+          // Repli déterministe.
+          const g = computeGreedyPlan(compact, params);
+          stops = g.stops.map(st => ({ ...byId[st.stationId], reason: st.reason }));
+          explanation = g.infeasible
+            ? `⚠️ Avec ${Math.round(currentAutonomyKm)} km d'autonomie, aucune station n'est atteignable sur un tronçon de ce trajet. Voici le meilleur plan partiel — fais le plein dès que possible.`
+            : 'Plan calculé localement : arrêts les moins chers atteignables sur ton trajet.';
+        }
+      }
+
+      // ── Chiffrage (calculé en code, pas par l'IA) ──
+      const litersFor = km => (km * conso) / 100;
+      const segPoints = [0, ...stops.map(s => s.progressKm), totalDistanceKm];
+      let cost = 0, liters = 0;
+      const cards = stops.map((s, i) => {
+        const legKm = Math.max(0, segPoints[i + 2] - s.progressKm);
+        const legL = litersFor(legKm);
+        cost += legL * s.price;
+        liters += legL;
+        const fromPrev = s.progressKm - segPoints[i];
+        const arrivalRange = (i === 0 ? currentAutonomyKm : fullTank) - fromPrev;
+        return { s, legKm, legL, fromPrev, arrivalRange };
+      });
+      const maxPrice = compact.length ? Math.max(...compact.map(c => c.price)) : 0;
+      const savings = Math.max(0, liters * maxPrice - cost);
+      const arrivalRangeKm = stops.length
+        ? (fullTank - (totalDistanceKm - stops[stops.length - 1].progressKm))
+        : (currentAutonomyKm - totalDistanceKm);
+      const sym = c => currencyFor(c);
+
+      // ── Marqueurs sur la carte ──
+      if (routePlanMarkers) mapInstance.removeLayer(routePlanMarkers);
+      routePlanMarkers = L.layerGroup().addTo(mapInstance);
+      stops.forEach((s, i) => {
+        const icon = L.divIcon({
+          className: 'plan-stop-marker',
+          html: `<div style="background:#8b5cf6;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)">${i + 1}</div>`,
+          iconSize: [26, 26], iconAnchor: [13, 13],
+        });
+        L.marker([s.lat, s.lng], { icon }).addTo(routePlanMarkers);
+      });
+      if (currentRoutePolyline) mapInstance.fitBounds(currentRoutePolyline.getBounds(), { padding: [40, 40] });
+
+      // ── Rendu ──
+      let html = `<div style="background:linear-gradient(135deg,rgba(139,92,246,0.18),rgba(99,102,241,0.10));border:1px solid rgba(139,92,246,0.25);border-radius:16px;padding:16px;margin:0 4px 14px;">
+        <div style="display:flex;gap:12px;text-align:center;">
+          <div style="flex:1;"><div style="font-size:22px;font-weight:800;color:#fff;">${stops.length}</div><div style="font-size:11px;color:rgba(255,255,255,0.55);">arrêt${stops.length > 1 ? 's' : ''}</div></div>
+          <div style="flex:1;"><div style="font-size:22px;font-weight:800;color:#fff;">CHF ${cost.toFixed(0)}</div><div style="font-size:11px;color:rgba(255,255,255,0.55);">carburant</div></div>
+          <div style="flex:1;"><div style="font-size:22px;font-weight:800;color:var(--accent-green);">CHF ${savings.toFixed(0)}</div><div style="font-size:11px;color:rgba(255,255,255,0.55);">économisé</div></div>
+          <div style="flex:1;"><div style="font-size:22px;font-weight:800;color:#fff;">${Math.max(0, Math.round(arrivalRangeKm))}</div><div style="font-size:11px;color:rgba(255,255,255,0.55);">km à l'arrivée</div></div>
+        </div>
+        ${explanation ? `<div style="margin-top:12px;font-size:13px;line-height:1.5;color:rgba(255,255,255,0.82);">${explanation}</div>` : ''}
+      </div>`;
+
+      if (!stops.length) {
+        html += `<div style="text-align:center;padding:14px 24px;color:rgba(255,255,255,0.5);font-size:13px;"><i class="ph-fill ph-check-circle" style="color:var(--accent-green);font-size:20px;"></i><br>Aucun arrêt nécessaire — bon trajet !</div>`;
+      } else {
+        html += `<div class="radar-cards-label"><i class="ph-fill ph-gas-pump" style="color:#8b5cf6"></i> Tes arrêts, dans l'ordre</div><div class="radar-cards">`;
+        cards.forEach((c, i) => {
+          html += `<div class="radar-result-card" data-id="${c.s.id}" style="animation-delay:${i * 0.07}s">
+            <div class="rrc-left">
+              <span class="rrc-medal" style="background:#8b5cf6;color:#fff;">${i + 1}</span>
+              <div>
+                <div class="rrc-name">${c.s.name || c.s.brand || 'Station'}</div>
+                <div class="rrc-tags">
+                  <span class="rrc-tag"><i class="ph-bold ph-gas-pump"></i> Plein ici · ≈ ${Math.round(c.legL)} L</span>
+                  ${c.s.devKm > 0.3 ? `<span class="rrc-tag"><i class="ph-bold ph-arrows-split"></i> Détour ${c.s.devKm.toFixed(1)} km</span>` : ''}
+                  <span class="rrc-tag" style="color:rgba(255,255,255,0.5)"><i class="ph-bold ph-flag"></i> Arrivée à ${Math.max(0, Math.round(c.arrivalRange))} km d'autonomie</span>
+                </div>
+              </div>
+            </div>
+            <div class="rrc-right" style="text-align:right">
+              <div class="rrc-price">${sym(c.s.country)} ${c.s.price.toFixed(3)}</div>
+              <div style="font-size:10px;color:var(--text-muted);">à ${Math.round(c.s.progressKm)} km</div>
+            </div>
+          </div>`;
+        });
+        html += '</div>';
+      }
+      resDiv.innerHTML = html;
+
+      resDiv.querySelectorAll('.radar-result-card').forEach(card => {
+        const full = allStations.find(x => x.id === card.dataset.id);
+        if (!full) return;
+        card.addEventListener('click', () => {
+          switchView('map');
+          setTimeout(() => flyToStation(full), 300);
+        });
+      });
+    } catch (err) {
+      resDiv.innerHTML = `<p style="text-align:center;color:#ef4444;padding:20px;">${err.message}</p>`;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph-bold ph-brain"></i> Planifier mes arrêts (IA)';
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -4882,7 +5540,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     renderAlertsList();
     renderBadgesGrid();
-    checkAlerts();
   }
 
   // ── 3. MODE COMMUTE ──────────────────────────────────────────
@@ -4941,7 +5598,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div><div class="rrc-name">${s.name}</div>
           <div style="font-size:11px;color:var(--text-muted);">À ${s.devDist?.toFixed(1)} km du trajet</div></div>
         </div>
-        <div class="rrc-price">CHF ${s.pricePerL.toFixed(3)}</div>
+        <div class="rrc-price">${currencyFor(s.country)} ${s.pricePerL.toFixed(3)}</div>
       </div>`).join('');
     el.querySelectorAll('.radar-result-card').forEach(card => {
       card.addEventListener('click', () => {
@@ -4957,38 +5614,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── 4. ALERTES PRIX ──────────────────────────────────────────
-  function checkAlerts() {
-    if (!priceAlerts.length || !allStations.length) return;
-    let triggered = [];
-    priceAlerts.forEach(alert => {
-      const matches = allStations.filter(s =>
-        s.prices[alert.fuel] && parseFloat(s.prices[alert.fuel]) < alert.price
-      );
-      if (matches.length > 0) triggered.push({ alert, station: matches[0] });
-    });
-    if (triggered.length > 0) showAlertNotification(triggered[0]);
-  }
-
-  function showAlertNotification({ alert, station }) {
-    if (document.getElementById('alert-notif')) return;
-    const notif = document.createElement('div');
-    notif.id = 'alert-notif';
-    notif.style.cssText = 'position:fixed;bottom:100px;left:16px;right:16px;z-index:9999;background:linear-gradient(135deg,#1e1e1e,#1a1a1a);border:1px solid rgba(74,222,128,0.4);border-radius:20px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,0.5);animation:fadeSlideIn 0.4s ease;';
-    notif.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="font-size:28px;">🔔</div>
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:15px;color:var(--accent-green);">Alerte Prix Déclenchée !</div>
-          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${alert.fuel} < CHF ${alert.price.toFixed(2)} chez <strong style="color:white;">${station.name}</strong></div>
-        </div>
-        <button onclick="document.getElementById('alert-notif')?.remove()" style="background:rgba(255,255,255,0.1);border:none;color:white;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;">✕</button>
-      </div>
-      <button onclick="(()=>{flyToStation(${JSON.stringify({id:station.id,lat:station.lat,lng:station.lng,name:station.name,address:station.address,prices:station.prices})});document.getElementById('alert-notif')?.remove();})()" style="margin-top:10px;width:100%;background:var(--accent-green);border:none;color:#000;border-radius:12px;padding:10px;font-weight:700;cursor:pointer;font-size:13px;">
-        Voir la station →
-      </button>`;
-    document.body.appendChild(notif);
-    setTimeout(() => notif?.remove(), 12000);
-  }
 
   function renderAlertsList() {
     const el = document.getElementById('alerts-list');
@@ -5188,7 +5813,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dataLoaded) {
       clearInterval(_checkAfterLoad);
       setTimeout(() => {
-        checkAlerts();
         checkAndUnlockBadges();
         if (commute?.stations?.length) {
           // Re-render commute with saved station data from allStations
@@ -5201,56 +5825,68 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 500);
 
   // ── CROWDSOURCING LOGIC ──────────────────────────────────────
-  const btnReportPrice = document.getElementById('btn-report-price');
-  const repModal = document.getElementById('report-modal');
-  const repSubmit = document.getElementById('rep-submit');
-  const repCancel = document.getElementById('rep-cancel');
-
-  btnReportPrice?.addEventListener('click', () => {
-    if (!currentUser) return alert('Vous devez être connecté pour signaler un prix.');
-    document.getElementById('rep-fuel').value = selectedFuel;
-    if (selectedStation && selectedStation.prices[selectedFuel]) {
-       document.getElementById('rep-price').value = selectedStation.prices[selectedFuel];
+  document.body.addEventListener('click', async (e) => {
+    const btnReportPrice = e.target.closest('#btn-report-price');
+    if (btnReportPrice) {
+      if (!currentUser) return alert('Vous devez être connecté pour signaler un prix.');
+      document.getElementById('rep-fuel').value = selectedFuel;
+      if (selectedStation && selectedStation.prices[selectedFuel]) {
+         document.getElementById('rep-price').value = selectedStation.prices[selectedFuel];
+      }
+      document.getElementById('report-modal').style.display = 'flex';
+      return;
     }
-    repModal.style.display = 'flex';
-  });
 
-  repCancel?.addEventListener('click', () => repModal.style.display = 'none');
-  
-  repSubmit?.addEventListener('click', async () => {
-    const f = document.getElementById('rep-fuel').value;
-    const p = parseFloat(document.getElementById('rep-price').value);
-    if (!f || isNaN(p) || p <= 0) return alert('Veuillez entrer un prix valide.');
+    const repCancel = e.target.closest('#rep-cancel');
+    if (repCancel) {
+      document.getElementById('report-modal').style.display = 'none';
+      return;
+    }
 
-    try {
-      repSubmit.disabled = true;
-      repSubmit.textContent = 'Envoi...';
+    const repSubmit = e.target.closest('#rep-submit');
+    if (repSubmit) {
+      const f = document.getElementById('rep-fuel').value;
+      const p = parseFloat(document.getElementById('rep-price').value);
+      if (!f || isNaN(p) || p <= 0) return alert('Veuillez entrer un prix valide.');
 
-      // Enregistrement dans une collection distincte Firestore
-      await addDoc(collection(db, "price_reports"), {
-        stationId: selectedStation.id,
-        fuel: f,
-        price: p,
-        userId: currentUser.uid,
-        timestamp: new Date()
-      });
+      try {
+        repSubmit.disabled = true;
+        repSubmit.textContent = 'Envoi...';
 
-      // Appliquer localement le changement temporaire
-      selectedStation.prices[f] = p;
-      const cached = allStations.find(s => s.id === selectedStation.id);
-      if (cached) cached.prices[f] = p;
-      
-      alert('Merci ! Votre signalement a été enregistré.');
-      repModal.style.display = 'none';
-      
-      // Rafraichir les détails affichés
-      showStationDetails(selectedStation);
-    } catch(err) {
-      console.error(err);
-      alert('Erreur: ' + err.message);
-    } finally {
-      repSubmit.disabled = false;
-      repSubmit.textContent = 'Valider';
+        await addDoc(collection(db, "price_reports"), {
+          stationId: selectedStation.id,
+          fuel: f,
+          price: p,
+          userId: currentUser.uid,
+          timestamp: new Date()
+        });
+
+        // Appliquer localement le changement temporaire
+        selectedStation.prices[f] = p;
+        const cached = allStations.find(s => s.id === selectedStation.id);
+        if (cached) cached.prices[f] = p;
+        
+        document.getElementById('report-modal').style.display = 'none';
+        
+        // Toast Custom de confirmation
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:12px 20px;border-radius:30px;font-weight:700;font-size:14px;box-shadow:0 10px 25px rgba(34,197,94,0.3);z-index:100000;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;';
+        toast.innerHTML = '<i class="ph-bold ph-check-circle"></i> Prix mis à jour';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.style.opacity = '1', 50);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+        
+        showStationDetails(selectedStation);
+      } catch(err) {
+        console.error(err);
+        alert('Erreur: ' + err.message);
+      } finally {
+        repSubmit.disabled = false;
+        repSubmit.textContent = 'Valider';
+      }
     }
   });
 

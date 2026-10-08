@@ -85,6 +85,9 @@ struct WebView: UIViewRepresentable {
             } else if url.scheme == "https" || url.scheme == "http" {
                 UIApplication.shared.open(url)
                 decisionHandler(.cancel)
+            } else if url.scheme == "mailto" || url.scheme == "tel" {
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
             } else {
                 decisionHandler(.allow)
             }
